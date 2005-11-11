@@ -1,0 +1,110 @@
+package WebGUI::FormProcessor;
+
+=head1 LEGAL
+
+ -------------------------------------------------------------------
+  WebGUI is Copyright 2001-2005 Plain Black Corporation.
+ -------------------------------------------------------------------
+  Please read the legal notices (docs/legal.txt) and the license
+  (docs/license.txt) that came with this distribution before using
+  this software.
+ -------------------------------------------------------------------
+  http://www.plainblack.com                     info@plainblack.com
+ -------------------------------------------------------------------
+
+=cut
+
+use strict qw(vars subs);
+use WebGUI::DateTime;
+use WebGUI::HTML;
+use WebGUI::Session;
+
+=head1 NAME
+
+Package WebGUI::FormProcessor;
+
+=head1 DESCRIPTION
+
+This is a convenience package to the individual form controls. It allows you to get the form post results back without having to load each form control seperately, instantiate an object, and call methods.
+
+=head1 SYNOPSIS
+
+ use WebGUI::FormProcessor;
+ $value = WebGUI::FormProcessor::process("favoriteColor","selectList","black");
+
+ $value = WebGUI::FormProcessor::someFormControlType("fieldName");
+
+ Example:
+
+ $value WebGUI::FormProcessor::text("title");
+
+=head1 METHODS
+
+These functions are available from this package:
+
+=cut
+
+
+#-------------------------------------------------------------------
+
+=head2 AUTOLOAD ()
+
+Dynamically creates functions on the fly for all the different form control types.
+
+=cut
+
+sub AUTOLOAD {
+        our $AUTOLOAD;
+        my $name = ucfirst((split /::/, $AUTOLOAD)[-1]);
+	my $fieldName = shift;
+        my $cmd = "use WebGUI::Form::".$name;
+        eval ($cmd);
+        if ($@) {
+                WebGUI::ErrorHandler::error("Couldn't compile form control: ".$name.". Root cause: ".$@);
+                return undef;
+        }
+        my $class = "WebGUI::Form::".$name;
+        return $class->new({name=>$fieldName})->getValueFromPost;
+}
+
+
+
+#-------------------------------------------------------------------
+
+=head2 process ( name, type [ , default ] )
+
+Returns whatever would be the expected result of the method type that was specified. This method also checks to make sure that the field is not returning a string filled with nothing but whitespace.
+
+=head3 name
+
+The name of the form variable to retrieve.
+
+=head3 type
+
+The type of form element this variable came from. Defaults to "text" if not specified.
+
+=head3 default
+
+The default value for this variable. If the variable is undefined then the default value will be returned instead.
+
+=cut
+
+sub process {
+
+	my ($name, $type, $default) = @_;
+	my $value;
+	$type = ucfirst($type);
+	$type = "Text" if ($type eq "");
+	$value = &$type($name);
+	unless (defined $value) {
+		return $default;
+	}
+	if ($value =~ /^[\s]+$/) {
+		return undef;
+	}
+	return $value;
+}
+
+
+1;
+

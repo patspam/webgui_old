@@ -1,0 +1,216 @@
+body{
+	background-image: url(bg.jpg);
+	background-repeat: repeat-x;
+	border: 5px #4E8AAB solid;
+	margin:0px;
+	min-height: 700px;
+}
+
+th {
+	text-align: left;
+	font-family: "Lucida Grande", "Lucida Sans Unicode", Tahoma, Verdana, Arial, sans-serif;
+}
+
+.adminConsoleTitleIcon {
+	position: absolute;
+	top: 12px;
+	left: 22px;
+	width: 48px;
+	height: 48px;
+	text-align: center;
+	z-index: 10;
+}
+
+.adminConsoleTitleIconMedalian {
+	z-index: 5;
+	position: absolute;
+	top: 4px;
+	left: 14px;
+}
+
+.adminConsoleTitle {
+	position: absolute;
+	top: 0px;
+	left: 85px;
+	font-size: 50px;
+	text-align: left;
+	padding: 20px 0px 0px 0px;
+	font-family: "Lucida Grande", "Lucida Sans Unicode", Tahoma, Verdana, Arial, sans-serif;
+	color: white;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+	font-size: 25px;
+	height: 73px;
+	vertical-align: middle;
+}
+
+.adminConsoleWorkArea {
+ 	border: 1px solid #D7D7D7;
+	margin: 65px 190px 50px 10px;
+	padding: 15px;
+	/*-moz-border-radius: 10px;*/
+	background-image: url(bg_console.gif);
+	background-repeat: repeat-x;
+	min-height: 400px;
+}
+/* Hides from non-ie: the holly hack \*/
+* html .adminConsoleWorkArea {
+	zoom: 1.00;
+	display: inline;
+	}
+/* End hide from non-ie */
+
+
+.adminConsoleMenu {
+	position: absolute;
+	top: 65px;
+	right: 10px;
+	width: 180px;
+/* 	border: 1px solid #ddd; 
+	padding: 5px; */
+	font-family: helvetica, arial;
+	font-size: 12px;
+	/* background-image: url(bg_console.gif);
+	background-repeat: repeat-x; */
+}
+
+.adminConsoleMainMenu {
+ 	border: 1px solid #D7D7D7;
+	padding: 5px;
+	margin: 5px;
+	/*-moz-border-radius: 10px;*/
+	background-image: url(bg_console.gif);
+	background-repeat: repeat-x;
+}
+
+.adminConsoleSubmenu {
+ 	border: 1px solid #D7D7D7;
+	padding: 5px;
+	margin: 5px;
+	/*-moz-border-radius: 10px;*/
+	background-image: url(bg_console.gif);
+	background-repeat: repeat-x;
+}
+
+.adminConsoleUtilityMenu {
+ 	border: 1px solid #D7D7D7;
+	padding: 5px;
+	margin: 5px;
+	/*-moz-border-radius: 10px;*/
+	background-image: url(bg_console.gif);
+	background-repeat: repeat-x;
+}
+
+.adminConsoleHidden {
+	display: none;
+	height: 0px;
+}
+
+.adminConsoleApplication {
+	float: left;
+	text-align: center;
+	width: 100px;
+	font-size: 14px;
+	font-family: helvetica, arial;
+	opacity: 0.7; 
+	height: 110px;
+}
+
+.adminConsoleApplication:hover {
+	opacity: 1.0;
+}
+
+.adminConsoleSpacer {
+	clear: both;
+}
+
+.adminConsoleToggle {
+	display: block;
+}
+
+.adminConsoleHelpIcon {
+	position: absolute;
+	top: 70px;
+	right: 196px;
+	z-index: 1000;
+}
+
+/* tables */
+
+.tableMenu {
+  	background-color: #CCCCCC;
+  	font-size: 10pt;
+  	font-family: Helvetica, Arial;
+}
+
+.tableMenu a {
+  	font-size: 10pt;
+  	text-decoration: none;
+}
+
+.tableHeader {
+  	background-color: #CECECE;
+  	font-size: 10pt;
+  	font-family: Helvetica, Arial;
+}
+
+.tableData {
+  	font-size: 10pt;
+  	font-family: Helvetica, Arial;
+}
+
+/* tab forms */
+
+.tab {
+  	border: 1px solid #dddddd;
+   	background-color: #eeeeee;
+	background-image: url(bg_console.gif);
+	background-repeat: repeat-x;		
+	/*-moz-border-radius: 6px 6px 0px 0px;*/
+}
+
+.tabBody {
+   	border: 1px solid #dddddd;
+   	border-top: 1px solid #dddddd;
+   	border-left: 1px solid #dddddd;
+   	background-color: #ffffff; 
+	/*-moz-border-radius: 10px;*/
+}
+
+div.tabs {
+    	line-height: 15px;
+    	font-size: 14px;
+}
+
+.tabHover {
+   	background-color: #cccccc;
+}
+
+.tabActive { 
+   	background-color: #dddddd; 
+}
+
+/* form stuff */
+
+.formDescription {
+	font-family: helvetica, arial;
+	font-size: 12px;
+}
+
+.formSubtext {
+	font-family: helvetica, arial;
+	font-size: 11px;
+}
+
+a{
+	font-family:  "Lucida Grande", "Lucida Sans Unicode", Tahoma, Verdana, Arial, sans-serif;
+	color: #639CBA;
+	text-decoration: none;
+}
+
+a:hover{
+	font-family:  "Lucida Grande", "Lucida Sans Unicode", Tahoma, Verdana, Arial, sans-serif;
+	color: 336B8A;
+	text-decoration: underline;	
+	
+}

@@ -1,0 +1,516 @@
+WebGUI 6.x Plugin Migration Guide
+---------------------------------
+
+This document is provided by the WebGUI 6.x development team in order to help
+you migrate your WebGUI 5.x plugins to the new API's. If you are not a WebGUI
+developer then this file won't make a lot of sense.
+
+CONTENTS
+
+1. Wobject/Asset Migration
+2. Macro Migration
+3. Authentication Migration
+4. Scheduler Migration
+5. System Changes Affecting Migration
+
+
+
+1. Wobject/Asset Migration
+--------------------------
+
+1.1 Global Unique Wobject IDs
+
+In 6.2 we changed wobjects to use the new Global Unique ID system. See WebGUI::Id for
+details. This change means that wobject Ids are now 22 character text strings rather
+than integers. That means you'll need to update your database tables and code to account
+for the Ids being strings. Also, anything using the setCollateral method will start using
+GUIDs as well.
+
+
+1.2 Converting Wobjects To Asset Wobjects
+
+In WebGUI 6.3 we made the first major change to the Wobject API. This should
+be the last major change until versioning is introduced in 6.7. In order to
+migrate your wobjects you will probably want to look at lib/WebGUI/Asset.pm,
+and lib/WebGUI/Asset/Wobject.pm as well as the wobjects that come with WebGUI.
+
+NOTE: Interweaved in the tips below are VIM regular expressions that can help
+the conversion process.
+
+The following tips should also help make your migration easer:
+
+	1.2.1 The wobjectId field has been changed to assetId. In addition the Wobject ID 
+	should no longer be passed in the URL as wid. Instead all wobjects now have
+	their own unique URL. Use this to call your methods.
+	
+	Old: WebGUI::URL::page("func=edit&wid=".$self->get("wobjectId"))
+	New: $self->getUrl("func=edit")
+	
+	Remove wid part from urls. Wid part at end:
+    	:%s/&wid=["']\.\(\$self\|\$_\[0\]\)->get(['"]wobjectId["']))/')/gc
+
+	Remove wid part from urls. Wid not at end:
+	:%s/&wid=["']\.\(\$self\|\$_\[0\]\)->get(['"]wobjectId["']).['"]//gc
+
+	Wid first form param:
+	:%s/['"]wid=["']\.\(\$self\|\$_\[0\]\)->get(['"]wobjectId["']).\(['"]\)&/\2/gc
+
+	Find remaining wids in URLs:
+    	/wid=
+
+	1.2.2 You can no longer assume that your forms and links are on the page they need 
+	to be to be called. Therefore use the getUrl() method inherited from Asset to
+	build your forms and links. 
+	
+	EXAMPLE: WebGUI::Form::formHeader({action=>$self->getUrl});
+	
+	:%s/WebGUI::URL::page/$self->getUrl/gc
+	:%s/WebGUI::URL::page/$_[0]->getUrl/gc
+	:%s/WebGUI::HTMLForm->new\(();\|;\)/WebGUI::HTMLForm->new(-action=>$self->getUrl);/gc
+	:%s/WebGUI::Form::formHeader\(();\|;\)/WebGUI::Form::formHeader({-action=>$self->getUrl});/gc
+
+	1.2.3 Your wobject instance data (the data in the wobject table and the namespace
+	table) will automatically be assigned an assetId. The wobjectId field in the
+	namespace table will be left in place so that you have a reference of what the
+	old ID was. Use this information (the assetId and wobjectId) to write a
+	conversion script to convert the wobject data (if necessary).
+
+	1.2.4 Use the definition of the the fields in your old new() method to create a
+	new definition method. See other wobjects as an example.
+	
+	1.2.5 The concept of namespace no longer exists. While it still works very well
+	in practice, it is no longer required that you call your table by the same
+	name as your class. And the same goes for help, internationalization, etc. We
+	still recommend using something like that, it's just not required.
+	
+	1.2.6 Because namespace no longer exists you can't call the namespace to get
+	international ids etc. Instead, hard code the international namespace. This is
+	important for a number of reasons, but the most pressing is inheritance.
+	Wobjects are now truely objects in that they support inheritance. To avoid
+	subclass wobjects having to define a whole new international file with the
+	exact same labels you have in your your international file, you need to hard
+	code your namespace.
+
+	Old: WebGUI::International::get("label",$self->get("namespace"));
+	New: WebGUI::International::get("label","Example");
+
+	:%s/\($self\|$_\[0\]\)->get(["']namespace["'])/'Survey'/gc
+
+	1.2.7 Convert your www_edit() method into the two methods getEditForm() and
+	www_edit(). See other wobjects for details.
+
+	1.2.8 Convert your www_view() method into a view() method. It should no longer
+	have a check to see if the user can view it. The www_view() method in the
+	Wobject superclass will do that.
+
+	1.2.9 Add a getIcon() method to your wobject. See other wobjects for examples.
+	If you don't wish to make icons, then exclude this method, it will be
+	inherited from the Asset superclass with the generic asset icon.
+
+	1.2.10 Rename your uiLevel() method to getUiLevel().
+
+	1.2.11 Rename your name() method to getName().
+
+	1.2.12 If your wobject used the forum system, then check out the new
+	lib/WebGUI/Asset/Wobject/Collaboration.pm system.
+
+	1.2.13 If your wobject used attachments, then check lib/WebGUI/Storage.pm and 
+	lib/WebGUI/Storage/Image.pm
+
+	1.2.14 The parameters for the wobject processTemplate() method have changed.
+
+	:%s/processTemplate(\([^,]*\),\([^,]*\)\(,[^,]*\)\=)/processTemplate(\2,\1)/gc
+
+	1.2.15 If you were using the template system directly rather than
+	using the wobject processTemplate() method, please note that it has
+	been replaced by the WebGUI::Asset::Template asset.
+
+        1.2.16 Since all assets are now pages, you need to provide your own
+        view level security on your www_ methods like this:
+
+        return WebGUI::Privilege::noAccess() unless ($self->canView);
+
+        and like this:
+
+        return WebGUI::Privilege::insufficient() unless ($self->canEdit);
+
+
+1.3 Quick Read Assets
+
+As of 6.7.0 Quick Read Assets have been removed. If you adopted quick read
+assets between 6.3.0 and 6.7.0 you'll need to change the getLineage rule from
+returnQuickReadObjects to returnObjects.
+
+
+1.4 Versioning
+
+If you're building any custom assets you'll need to write an upgrade script
+for 6.6 to 6.7 that will add a revisionDate (bigint) field to your namespace
+table. And you'll need to select the revisionDate from the asset table to
+initially populate the field in your table. revisionDate along with assetId
+should create a composite primary key for your table. Here are some example
+SQL queries to get you started in your transition:
+
+	alter table MyAsset add column revisionDate bigint not null;
+	alter table MyAsset drop primary key;
+	...look up the revision date for each asset instance from the asset table...
+	alter table MyAsset add primary key (assetId,revisionDate);
+
+In addition, if you wish to version the attachments to your asset, you'll need
+to add addRevision(), purge(), and purgeRevision() methods to your asset. See
+WebGUI::Asset::File and WebGUI::Asset:Post for examples of what these methods
+should look like.
+
+Also, if you have written any queries to go against the "asset" table, you
+should note that the asset table has been split into two tables "asset" and
+"assetData". So you'll need to change your queries appropriately.
+
+Other than that you shouldn't have to make any revisions to your asset to
+support versioning. Your collateral tables need not have the revision date as
+they'll be tied to the assetId regardless of the revision date.
+
+
+1.5 Constructor API Change
+
+In 6.7.0 the new() and newByDynamicClass() API's in WebGUI::Asset changed
+slightly. In most situations the changes will not cause any problems, but for
+some asset developers there may be a slight change.
+
+
+1.6 Binary GUIDs
+
+In 6.7.3 we noticed a problem with the GUID system. MySQL by default reads
+varchar fields as case insensitive, which can cause a big overlap problem for
+assetIds, userIds, and anything else that uses GUIDs. Therefore you need to
+alter all your custom tables and add the binary operator to the GUID field
+definitions like so:
+
+alter table MyTable change assetId assetId binary not null;
+
+
+1.7 processMacros() Method Removed
+
+In 6.8 the long depricated method processMacros() was removed. No one should
+be using this any longer anyway, but we thought we'd warn you anyway.
+
+
+
+2. Macro Migration
+-------------------
+
+2.1 Navigation Macros
+
+As of WebGUI 6.0 there is no longer a need to develop custom navigation macros. WebGUI 
+has an entirely new navigation system that is 100% configurable and templated. The
+legacy navigation system has been removed. Any nav macros that you've written
+will need to be removed from the system. Then just create a navigation
+configuration to do what your old nav once did. 
+
+If you absolutely must write a navigation macro for some reason that our nav
+system does not accomodate you, then please check out the new API in
+WebGUI::Navigation.
+
+
+2.2 Navigation Macros Revisited
+
+As of 6.3 check out lib/WebGUI/Asset/Wobject/Navigation.pm if you want to
+write custom navigation macros.
+
+
+2.3 Macro API Changed
+
+In 6.8 we modified the macro API to be more user friendly, and more
+importantly to use a lot less memory. This has two results. If you use the
+macro methods like filter(), negate(), or process() then you need to start
+passing your content in as a scalar reference instead of a regular scalar. If
+you write your own macros, you no longer need to call getParams() to retreive
+your parameters. That is automatically done for you now.
+
+
+
+3. Authentication Migration
+-----------------------------
+
+3.1 Authentication Modules Changes
+
+Authentication in 6.0 is now completely Object Oriented.  The superclass WebGUI::Auth defines a loose set of rules by which
+to create authentication parameters.  Subclasses MUST be WebGUI::Auth objects, however they can define thier own rules
+for authentication.  No methods are required to be overwritten as it is up to the user to decide which methods may be called
+through WebGUI.  The only method that MUST be calllable is the init routine which should define the starting point for authentication.
+For instance, WebGUI's init method calls the displayLogin function.
+
+Methods which remain compatible the auth modules distributed with WebGUI:
+www_createAccount
+www_deactivateAccount
+www_displayAccount
+www_displayLogin
+www_login
+www_logout
+www_recoverPassword
+
+There is no guarentee, however that any custom apps which call these routines will work for custom authentication instances.
+
+3.2 Auth Templates
+
+As of 6.3 you must add three new methods to your authentication modules. They are
+getAccountTemplateId(), getCreateAccountTemplateId(), and
+getLoginTemplateId(). If you are not using the superclass methods associated
+with these, then you can skip this. Also the template parameters for the
+associated methods has been removed in favor of these methods. And finally,
+take a look a WebGUI::Asset::Template for changes in the template system API.
+
+
+4. Scheduler Migration
+-----------------------
+
+4.1 Nothing Yet
+
+There have currently been no changes to the scheduler API.
+
+
+
+5. System Changes Affecting Migration
+-------------------------------------
+
+5.1 Set Date Format Changes
+
+In 6.0 the "set date" format used by WebGUI::Form::date() and other methods
+was changed from "MM/DD/YYYY" to "YYYY-MM-DD" and optionally "YYYY-MM-DD
+HH:MM:SS". If you are using WebGUI::FormProcessor to handle processing of your
+dates then you will notice no side effects from the format change. If you are
+not, then you should convert your plugin to use WebGUI::FormProcessor.
+
+In addition to the format change above, we also made one related API change.
+WebGUI::Form::dateTime() and WebGUI::HTMLForm->dateTime() no longer have
+"dateExtras" and "timeExtras", but rather just "extras" properties. This is
+because there is only one field to represent both the date and the time,
+unlike before.
+
+
+5.2 Database Links
+
+The database links API was changed in 6.0. The getHash function was removed and
+replaced with a getList function that returns a hash reference.
+
+
+5.3 Paginator
+
+In 6.0 almost all of the paginator methods were modified in an incompatible
+way, including the constructor. We removed depricated parameters from the methods, 
+which will cause pagination not to function in items that have not been updated. 
+
+
+5.4 Dynamic Plug-in Loading
+
+In 6.1 plug-ins (Wobjects, Macros, and Auth) are all dynamically loaded. They
+used to be statically loaded at session open time. If you are writing
+something that uses a macro, wobject, or auth module outside of the usual
+mechanisms that call those plug-ins, then you'll need to write a piece of code
+to load the plug-in at use time.
+
+
+5.5 Privilege API Change
+
+In 6.1 we moved isInGroup from WebGUI::Privilege to WebGUI::Grouping, where it
+belongs. We also moved canViewPage and canEditPage to WebGUI::Page and renamed them 
+to canView and canEdit. And finally, we moved canEditWobject and
+canViewWobject to WebGUI::Wobject and renamed them canView and canEdit and
+converted them from regular functions into methods.
+
+
+5.6 Template API Change
+
+In 6.1 we completely rewrote the underlying template framework to add template
+caching. Any plug-ins that use WebGUI::Template, must be updated to reflect
+the new API. Template caching is currently disabled, however.
+
+
+5.7 Internationalization and Help Change
+
+In 6.1 we moved the internationalization out of the database and into compiled
+perl modules. This helps tremendously in performance. It also allows for
+text-based tags to be used instead of integers for international ids. If
+you've written any plug-ins that use the internationalization system, you'll
+need to migrate them to the new system. We've created a tool that will
+auto-generate the new help and internationalization files from an existing 6.0
+database. You can get it from the "tools" module in CVS or in the user
+contributions area on plainblack.com. The utility is called:
+gen61i18nfrom60data.pl
+
+We also made the International API object oriented. The old procedural version
+is still intact as well. See WebGUI::International for API changes.
+
+As a developer you can convert your translations (including English) and your
+help files using a script we provide. You can find the script here:
+
+http://www.plainblack.com/translations/translations
+
+
+5.8 WebGUI::Session Changes
+
+In 6.1 we changed the session API to remove functions that didn't really
+belong in WebGUI::Session. The main changes of interest are that you no longer
+do HTTP redirects and set cookies via session. Take a look at WebGUI::HTTP for
+details.
+
+
+5.9 Global Unique IDs
+
+In 6.2 we added global unique Ids to WebGUI. This means that a lot of the integer-
+based incrementer IDs will now be replaced with 22 character text IDs. You should
+update your code and database tables to take advantage of this. Some of the more
+important ID's that have been changed are User Ids, Group Ids, and Wobject Ids.
+See WebGUI::Id for more information.
+
+
+5.10 POD
+
+In 6.2 we've switched to a new Plain Old Documentation (POD) format. See Ruling
+WebGUI for details.
+
+
+5.11 Internationalization and URLs
+
+In 6.3 we moved URL compliance to the language file. We did this because the
+non-latin characterset languages were having trouble with WebGUI generated
+URLs. So now they can write in their own handlers to deal with WebGUI
+generated URLs. If your language uses a latin character set, you can just copy
+the makeUrlCompliant subroutine from lib/WebGUI/i18n/English.pm into your
+language file.
+
+
+5.12 UTF-8 Required
+
+As of 6.3 we're now requiring that all WebGUI sites use the UTF-8 character
+set. The language packs distributed from the WebGUI Worldwide members will now
+be converted to UTF-8, and you can get instructions on their sites as to how
+to convert your content, if necessary.
+
+
+5.13 Form Changes 
+
+The following form changes were made in 6.3:
+
+The interval subroutine in WebGUI::Form and WebGUI::HTMLForm had an API
+change. See the documentation for WebGUI::Form and WebGUI::HTMLForm for
+details.
+
+The select method in WebGUI::HTMLForm that has been depricated forever has
+been removed.
+
+Most of the subroutines in WebGUI::HTMLForm and WebGUI::Form now have a
+parameter called "defaultValue" which will be used in the event that "value"
+is not specified.
+
+You can now dynamically add tabs to WebGUI::TabForms.
+
+
+5.14 Persistent API Removed
+
+The never understood and not really used Persistent API has been removed. If
+you want to store something in a tree, it probably belongs in the asset tree
+anyway.
+
+
+5.15 Node/Attachment System Replaced
+
+In 6.3 the file system storage mechanism of lib/WebGUI/Node.pm and
+lib/WebGUI/Attachment.pm have been replaced in favor of lib/WebGUI/Storage.pm.
+If you had anything using the old system we highly recommend migrating it into
+the new system as it is much more flexible. Alternatively you can copy the old 
+system back into place (it should still work, but no guarantees).
+
+
+5.16 Template System Replaced
+
+In 6.3 the template system has been replaced in favor of the new template
+asset. Please see WebGUI::Asset::Template for details.
+
+
+5.17 WebGUI::ErrorHandler API Changed
+
+In 6.6 we brought log4perl to bear on our debuging and logging needs. This had
+a slight impact on the WebGUI::ErrorHandler API. Although there are many
+changes, the only thing anyone should notice is that fatalError() was renamed
+to fatal().
+
+
+5.18 Form API Changed
+
+In 6.7 we made the form controls pluggable so that new ones can be added
+without changing the core code at all. This change is mostly transparent
+unless you're still using the ancient deprecated WebGUI::HTMLForm syntax that
+allows you to pass in form control properties as arrays like this:
+
+my $f = WebGUI::HTMLForm->new;
+$f->text("nameGoesHere","value goes here","label goes here");
+
+Instead you should be using something like this:
+
+$f->text(
+   name=>"nameGoesHere",
+   value=>"Value Goes Here",
+   label=>"Label goes here"
+  );
+
+Note you can pass in the parameters as either a hash reference or a hash and
+the param names can be tagged or not. Here are examples:
+
+$f->text(-name=>"nameGoesHere");
+$f->text({-name=>"nameGoesHere"});
+$f->text(name=>"nameGoesHere");
+$f->text({name=>"nameGoesHere"});
+
+Also every form control now has an auto-generated ID attribute to aid in the
+swift development of AJAX features. You can override the autogenerated one by
+passing in an id parameter like this:
+
+$f->text(name=>"this",id==>"myownpersonalid");
+
+Also, calls to WebGUI::Form::submit must be changed to WebGUI::Form::Submit.
+Also, WebGUI::Form::Submit by itself doesn't work. WebGUI::Form::Submit() 
+must be used.
+
+See WebGUI::HTMLForm and WebGUI::Form::Control for additional information.
+
+
+5.19 SQL Files For Upgrades Deprecated
+
+Starting with WebGUI 6.7.0 .sql files will no longer be used in core upgrades
+of WebGUI sites. We also suggest not using them for upgrades of custom code.
+The reason is that the database is becoming very complex, and it's easier to
+introduce errors to the database when modifying it directly rather than using
+the APIs.
+
+
+5.20 Use ; instead of & in URLs
+
+In our effort to achieve full XHTML strict compliance we have switched
+WebGUI's internals to expect a ; instead of a & as the URL query parameter
+delimiter in 6.7.2. You must update your WebGUI plugins to reflect this new
+URL style.
+
+
+5.21 WebGUI::Search Removed
+
+The old WebGUI::Search package has been removed in 6.7.2. It hasn't been used
+by any WebGUI core package since 6.3 and wasn't really used much prior to that. 
+If you were using it, just copy it's subs into your app.
+
+
+5.22 DateTime API Changed Slightly
+
+In 6.8.0, as a result of migrating the DateTime API away from Date::Manip and 
+to DateTime we've eliminated the need for several utility functions, and
+therefore removed them. This shouldn't affect almost anybody, but we're
+mentioning it just in case you're using WebGUI::DateTime in an odd mannner.
+They are: epochToDate, dateToEpoch, epochToArray, arrayToEpoch
+
+
+5.22 CGI No Longer
+
+As of 6.8.0 we are no longer using CGI to handle our web interactions. Instead
+we are using a native mod perl handler. If you used $session{cgi} object
+you'll now need to convert your applications to use the methods provided by
+Apache2::Request which is referenced through $session{modperl} and $session{req}.
+

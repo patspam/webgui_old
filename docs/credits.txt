@@ -1,0 +1,63 @@
+####################################################################
+#                          WebGUI Credits                          #
+####################################################################
+
+The following people/companies are responsible for WebGUI:
+
+
+WebGUI Core..........................JT Smith / Plain Black
+
+Contributing Developers..............Peter Beardsley / Appropriate Solutions
+                                     Leendert Bottelberghs / United Knowledge
+                                     Richard Caelius / 100 World
+                                     Irving Carrion
+                                     Richard Clark
+                                     Doug Collinge
+                                     Flavio Curti
+                                     Jeff Depons / Adaptive Dynamics
+                                     Frank Dillon / Plain Black
+                                     Arne Dokken
+                                     Junying Du / Brunswick
+                                     Ed Van Duinen / UNC
+                                     Greg Fast / Brunswick
+                                     Chris Gebhardt / OpenServe
+                                     Andy Grundman
+                                     Chris Jackson
+                                     Roy Johnson / Sparton
+                                     Koen de Jonge / ProcoliX
+                                     Martin Kamerbeek / ProcoliX
+                                     Christian Kocourek
+                                     John W. Krahn
+                                     Len Kranendonk
+                                     Colin Kuskie
+                                     Christophe Marcant
+                                     Tony Mountifield
+                                     Tavis Parker / ParkerOne Consulting
+                                     Daniel Quinlan
+                                     Alan Ritari / DonorWare
+                                     Hal Roberts / Harvard
+                                     Steve Simms
+                                     Ben Simpson
+                                     Jeff Szpak / Plain Black
+                                     Sean Tu / WDI
+                                     Madsen Wikholm
+                                     Matt Wilson / Plain Black
+                                     Gerald Young
+
+
+The following are people/companies who didn't directly contribute
+to WebGUI, but who's work has made WebGUI possible:
+
+
+Perl.................................Larry Wall / O'Reilly
+
+TinyMCE..............................MoxieCode
+                                     http://www.moxiecode.com
+
+JS Calendar..........................Mihai "Mishoo" Bazon
+
+Cool Menus...........................Thomas Brattli
+
+dTree................................Geir Landro
+				     http://www.destroydrop.com
+
