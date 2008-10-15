@@ -1,4 +1,0 @@
-# Add paths to lib folders where you have custom plugins for WebGUI.
-# Note that the folder must contain the same directory structure of
-# of WebGUI itself. This file should reside at WebGUI/sbin/preload.custom
-/data/Custom/lib
