@@ -11,13 +11,13 @@ Package WebGUI::Form::AutoComplete
 
 =head1 DESCRIPTION
 
-Creates a YUI-based AutoComplete field.
-The options hashref is used to populate the YUI autocomplete data source.
+Creates a YUI-based AutoComplete WebGUI form field.
+The list of possibleValues/options are used to populate the YUI autocomplete data source.
 A trigger icon, a la the ExtJS AutoComplete has also been added.
 
 =head1 SEE ALSO
 
-This is a subclass of WebGUI::Form::Text with a heavy smattering of methods from WebGUI::Form::List.
+This is a subclass of WebGUI::Form::List.
 
 =head1 METHODS 
 
@@ -38,10 +38,6 @@ The following additional parameters have been added via this sub class.
 =head4 maxlength
 
 Defaults to 255. Determines the maximum number of characters allowed in this field.
-
-=head4 defaultValue
-
-Defaults to undefined
 
 =head4 size
 
