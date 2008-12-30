@@ -786,15 +786,17 @@ sub _updateDataAndTriggerWorkflows {
     if ($is_access) {
         $db_write_required = 1;
 
+        # N.B. dateAccessMostRecentlyTrue/False currently disabled
+        # - may not be needed by anyone and causes extra db writes
         if ($success) {
-            $field_updates{dateAccessMostRecentlyTrue} = $dt;
+#            $field_updates{dateAccessMostRecentlyTrue} = $dt;
+#            $self->session->log->debug('Updating dateAccessMostRecentlyTrue');
             $trigger_workflow{AccessTrue}              = 1;
-            $self->session->log->debug('Updating dateAccessMostRecentlyTrue');
         }
         else {
-            $field_updates{dateAccessMostRecentlyFalse} = $dt;
+#            $field_updates{dateAccessMostRecentlyFalse} = $dt;
+#            $self->session->log->debug('Updating dateAccessMostRecentlyFalse');
             $trigger_workflow{AccessFalse}              = 1;
-            $self->session->log->debug('Updating dateAccessMostRecentlyFalse');
         }
 
         # First direct access attempt?
