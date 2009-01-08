@@ -321,7 +321,6 @@ is($rJSON->lastResponse(), 5, 'goto: finds first if there are duplicates');
 
 ####################################################
 #
-<<<<<<< HEAD:t/Asset/Wobject/Survey/ResponseJSON.t
 # processGotoExpression
 #
 ####################################################
@@ -396,8 +395,6 @@ $rJSON->questionsAnswered(-1 * $rJSON->questionsAnswered);
 
 ####################################################
 #
-=======
->>>>>>> tags/WebGUI_7.6.7-beta:t/Asset/Wobject/Survey/ResponseJSON.t
 # recordResponses
 #
 ####################################################
