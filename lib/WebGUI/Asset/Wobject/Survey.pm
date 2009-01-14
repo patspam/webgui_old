@@ -299,14 +299,14 @@ sub www_submitObjectEdit {
 } ## end sub www_submitObjectEdit
 
 #-------------------------------------------------------------------
-=head2 Allow survey editors to "jump to" a particular section of question in a 
+=head2 Allow survey editors to "jump to" a particular section of question in a
 Survey by tricking Survey into thinking they've completed the survey up to that
 point. Useful for survey builders.
 Note that calling this method will delete any existing survey responses for the
 current user (although only survey builders can call this method so that shouldn't be
 a problem
 =cut
- 
+
 sub www_jumpTo {
     my $self = shift;
 
@@ -314,7 +314,7 @@ sub www_jumpTo {
         unless ( $self->session->user->isInGroup( $self->get('groupToEditSurvey') ) );
 
     my $data = $self->session->form->paramsHashRef();
-    
+
     $self->session->log->debug("jumpTo to $data->{id}");
 
     # Remove existing responses for current user
@@ -511,7 +511,7 @@ sub www_loadSurvey {
     elsif ( $var->{type} eq 'answer' ) {
         $editHtml = $self->processTemplate( $var, $self->get("answerEditTemplateId") );
     }
-    
+
     # Generate the list of valid goto targets
     my @gotoTargets = $self->survey->getGotoTargets;
 
@@ -568,8 +568,8 @@ sub www_loadSurvey {
     my $return = {
         "address", $address, "buttons", \%buttons,
         "edithtml", $editflag ? $editHtml : '',
-        "ddhtml",  $html,    "ids",     \@ids,     "type",     $var->{type},
-		gotoTargets => \@gotoTargets,
+        "ddhtml",  $html,    "ids",     \@ids,     "type",     $var->{type}
+        ,gotoTargets => \@gotoTargets,
     };
     $self->session->http->setMimeType('application/json');
     return to_json($return);

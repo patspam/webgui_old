@@ -245,7 +245,7 @@ sub canEdit {
     my $self = shift;
     my $userId = shift || $self->session->user->userId;
     my $user = WebGUI::User->new($self->session, $userId);
-    
+
     # See if we should delegate to Flux..
     if ($self->get('fluxEnabled') && $self->session->setting->get('fluxEnabled')) {
         if ($user->isInGroup(3)) {
@@ -254,12 +254,12 @@ sub canEdit {
         }
         $self->session->log->debug('Delegating to Flux for canEdit on asset: ' . $self->getUrl . ' (' . $self->getId . ')');
         return WebGUI::Flux->evaluateFor({
-            user => $user, 
-            assetId => $self->getId(), 
+            user => $user,
+            assetId => $self->getId(),
             fluxRuleId => $self->get('fluxRuleIdEdit')
         });
     }
-    
+
     if ($userId eq $self->get("ownerUserId")) {
         return 1;
     }
@@ -293,7 +293,7 @@ sub canView {
         $user =  $self->session->user;
         $userId = $user->userId();
     }
-    
+
     # See if we should delegate to Flux..
     if ($self->get('fluxEnabled') && $self->session->setting->get('fluxEnabled')) {
         if ($user->isInGroup(3)) {
@@ -302,12 +302,12 @@ sub canView {
         }
         $self->session->log->debug('Delegating to Flux for canView on asset: ' . $self->getTitle . ' (' . $self->getId . ')');
         return WebGUI::Flux->evaluateFor({
-            user => $user, 
-            assetId => $self->getId(), 
+            user => $user,
+            assetId => $self->getId(),
             fluxRuleId => $self->get('fluxRuleIdView')
         });
     }
-    
+
     if ($userId eq $self->get("ownerUserId")) {
         return 1;
     }
@@ -2516,8 +2516,8 @@ sub www_add {
 		groupIdView => $self->get("groupIdView"),
 		groupIdEdit => $self->get("groupIdEdit"),
 		fluxEnabled => $self->get("fluxEnabled"),
-        fluxRuleIdView => $self->get("fluxEnabled"),
-        fluxRuleIdEdit => $self->get("fluxEnabled"),
+		fluxRuleIdView => $self->get("fluxEnabled"),
+		fluxRuleIdEdit => $self->get("fluxEnabled"),
 		ownerUserId => $self->get("ownerUserId"),
 		encryptPage => $self->get("encryptPage"),
 		styleTemplateId => $self->get("styleTemplateId"),

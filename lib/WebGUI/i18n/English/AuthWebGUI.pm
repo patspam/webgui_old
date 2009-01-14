@@ -87,7 +87,7 @@ Settings screen, displayed as hoverhelp.|,
         lastUpdated => 1230600500,
         context => q|Description of the welcomeMessage tmpl_var for the template help.|,
     },
- 
+
     'newUser_username' => {
         message => q|The username for the newly created account.|,
         lastUpdated => 1230600500,

@@ -175,8 +175,8 @@ function editListItem(url,fieldId,copy) {
 		buttons : [ { text:"Submit", handler:handleSubmit, isDefault:true }, 
 				{ text:"Cancel", handler:handleCancel } ]
 		} );
-		
-		if(copy){	
+
+		if(copy){
 			editFieldDialog.setHeader("Copy Field");
 		}else{
 			editFieldDialog.setHeader("Edit Field");
@@ -287,11 +287,10 @@ function initAddFieldDialog() {
 
 	var handleSuccess = function(o) {
 		var response = o.responseText;
-		var listItemId = response.slice(0,22); 
-		var newInnerHTML = response.slice(22);	
+		var listItemId = response.slice(0,22);
+		var newInnerHTML = response.slice(22);
 		var label = addFieldDialog.getData().label;
 		addListItemHTML(listItemId, newInnerHTML,label);
-		
 	};
 	
 	var handleFailure = function(o) {

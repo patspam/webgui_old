@@ -329,7 +329,7 @@ sub duplicateThing {
     my $thingProperties = $self->getThing($oldThingId);
     $thingProperties->{thingId} = 'new';
     $thingProperties->{label}   = $thingProperties->{label}.' (copy)';
-    
+
     my $newThingId = $self->addThing($thingProperties);
     my $fields = $db->buildArrayRefOfHashRefs('select * from Thingy_fields where assetId=? and thingId=?'
             ,[$self->getId,$oldThingId]);
@@ -1774,10 +1774,10 @@ sub www_editThing {
             ."  <td style='width:100px;' valign='top' class='formDescription'>".$field->{label}."</td>\n"
             ."  <td style='width:370px;'>".$formElement."</td>\n"
             ."  <td style='width:120px;' valign='top'> <input onClick=\"editListItem('".$self->session->url->page()
-            ."?func=editField;fieldId=".$field->{fieldId}.";thingId=".$thingId."','".$field->{fieldId}."')\" value='Edit' type='button'>"
+            ."?func=editField;fieldId=".$field->{fieldId}.";thingId=".$thingId."','".$field->{fieldId}."')\" value='".$i18n->get('Edit','Icon')."' type='button'>" 
             ." <input onClick=\"editListItem('".$self->session->url->page()
             ."?func=editField;copy=1;fieldId=".$field->{fieldId}.";thingId=".$thingId."','".$field->{fieldId}
-            ."','copy')\" value='Copy' type='button'>" 
+            ."','copy')\" value='Copy' type='button'>"
             ."<input onClick=\"deleteListItem('".$self->session->url->page()."','".$field->{fieldId}."','".$thingId."')\" " 
             ."value='".$i18n->get('Delete','Icon')."' type='button'></td>\n</tr>\n</table>\n</li>\n";
 
@@ -2118,15 +2118,14 @@ Returns the html for a pop-up dialog to add or edit a field.
 
 sub www_editField {
 
-    my $self    = shift;
-    my $session = $self->session;
+    my $self = shift;
     my (%properties,$thingId,$fieldId,$dialogBody);
-    return $session->privilege->insufficient() unless $self->canEdit;
-    $fieldId = $session->form->process("fieldId");
-    $thingId = $session->form->process("thingId");
-    %properties = $session->db->quickHash("select * from Thingy_fields where thingId=? and fieldId=? and assetId=?",
+    return $self->session->privilege->insufficient() unless $self->canEdit;
+    $fieldId = $self->session->form->process("fieldId");
+    $thingId = $self->session->form->process("thingId");
+    %properties = $self->session->db->quickHash("select * from Thingy_fields where thingId=? and fieldId=? and assetId=?",
         [$thingId,$fieldId,$self->get("assetId")]);
-    if($session->form->process("copy")){
+    if($self->session->form->process("copy")){
         $properties{oldFieldId} = $properties{fieldId};
         $properties{fieldId}    = 'new';
         $properties{label}      = $properties{label}.' (copy)';
@@ -2216,7 +2215,7 @@ sub www_editFieldSave {
     $listItemHTML = "<table>\n<tr>\n<td style='width:100px;' valign='top' class='formDescription'>".$label."</td>\n"
         ."<td style='width:370px;'>".$formElement."</td>\n"
         ."<td style='width:120px;' valign='top'> <input onClick=\"editListItem('".$self->session->url->page()
-        ."?func=editField;fieldId=".$newFieldId.";thingId=".$properties{thingId}."','".$newFieldId."')\" value='Edit' type='button'>"
+        ."?func=editField;fieldId=".$newFieldId.";thingId=".$properties{thingId}."','".$newFieldId."')\" value='".$i18n->get('Edit','Icon')."' type='button'>"
         ." <input onClick=\"editListItem('".$self->session->url->page()
             ."?func=editField;copy=1;fieldId=".$newFieldId.";thingId=".$properties{thingId}."','".$newFieldId
             ."','copy')\" value='Copy' type='button'>"
