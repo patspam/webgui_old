@@ -4290,48 +4290,6 @@ Users may override this setting in their profile.
             context     => q{i18n label for YUI paginator},
         },
 
-        'years' => {
-            message => q{years},
-            lastUpdated => 1226706547,
-            context     => q{i18n label for time duration in WebGUI::DateTime},
-        },
-
-        'months' => {
-            message => q{months},
-            lastUpdated => 1226706547,
-            context     => q{i18n label for time duration in WebGUI::DateTime},
-        },
-
-        'weeks' => {
-            message => q{weeks},
-            lastUpdated => 1226706547,
-            context     => q{i18n label for time duration in WebGUI::DateTime},
-        },
-
-        'days' => {
-            message => q{days},
-            lastUpdated => 1226706547,
-            context     => q{i18n label for time duration in WebGUI::DateTime},
-        },
-
-        'hours' => {
-            message => q{hours},
-            lastUpdated => 1226706547,
-            context     => q{i18n label for time duration in WebGUI::DateTime},
-        },
-
-        'minutes' => {
-            message => q{minutes},
-            lastUpdated => 1226706547,
-            context     => q{i18n label for time duration in WebGUI::DateTime},
-        },
-
-        'seconds' => {
-            message => q{seconds},
-            lastUpdated => 1226706547,
-            context     => q{i18n label for time duration in WebGUI::DateTime},
-        },
-
         'profile privacy settings' =>  {
             message     => q{Privacy Settings},
             lastUpdated => 1226706547,
@@ -4342,6 +4300,29 @@ Users may override this setting in their profile.
             message => q|Read More|,
             lastUpdated => 1229013268,
             context => q|Template label.  Used to indicate that a shortened version of the content is currently displayed and that more can be read by clicking a link.|
+        },
+
+        'For' => {
+            message => q|For|,
+            lastUpdated => 1230269893,
+        },
+
+        'rss' => {
+            message => q|RSS|,
+            lastUpdated => 1230584702,
+            context => q|Abbreviation for Really Simple Syndication, and other similar terms.|,
+        },
+
+        'Upload an attachment' => {
+            message => q|Upload an attachment|,
+            context => q|Label in the Attachments form control.|,
+            lastUpdated => 1230930518,
+        },
+
+        'Upload attachments here. Copy and paste attachments into the editor.' => {
+            message => q|Upload attachments here. Copy and paste attachments into the editor.|,
+            context => q|Label in the Attachments form control.|,
+            lastUpdated => 1230930518,
         },
 
 };

@@ -171,6 +171,12 @@ Settings screen, displayed as hoverhelp.|,
 		lastUpdated => 1078852836
 	},
 
+	'email validation confirmed' => {
+		message => q|Thank you for activating your account.  You may now log in with your username and password.|,
+		context => q|Message displayed to the user after they validate their email address.|,
+		lastUpdated => 1230588145,
+	},
+
 	'display account template title' => {
 		message => q|WebGUI Authentication Display Account Template|,
 		lastUpdated => 1078852836
