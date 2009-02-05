@@ -1224,6 +1224,43 @@ sub www_exportSimpleResults {
 }
 
 #-------------------------------------------------------------------
+sub www_exportStructure {
+    my $self = shift;
+
+    return $self->session->privilege->insufficient()
+        unless ( $self->session->user->isInGroup( $self->get('groupToEditSurvey') ) );
+
+    my $filename = $self->session->url->escape( $self->get("title") . "_structure.csv" );
+    
+    $self->loadSurveyJSON();
+    
+    my $content = '';
+    
+    for my $s (@{$self->survey->sections}) {
+        $s->{variable} = 'Undefined!' if not defined $s->{variable} or $s->{variable} eq '';
+        $content .= "<b>$s->{variable}</b> &ldquo;$s->{title}&rdquo;</b>";
+        $content .= '<ul>';
+        for my $q (@{$s->{questions}}) {
+            $q->{variable} = 'Undefined!' if not defined $q->{variable} or $q->{variable} eq '';
+            $content .= '<li>';
+            $content .= "<b>$q->{variable}</b> &ldquo;$q->{text}&rdquo;";
+            $content .= '<ul>';
+            for my $a (@{$q->{answers}}) {
+                $content .= '<li>';
+                $a->{value} = 'Undefined!' if not defined $a->{value} or $a->{value} eq ''; 
+                $content .= "($a->{value}) &ldquo;$a->{text}&rdquo;";
+                $content .= '</li>';
+            }
+            $content .= '</ul>';
+            $content .= '</li>';
+        }
+        $content .= '</ul>';
+    }
+    
+    return $content;
+}
+
+#-------------------------------------------------------------------
 sub export {
     my $self     = shift;
     my $filename = shift;
