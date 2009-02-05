@@ -1230,34 +1230,51 @@ sub www_exportStructure {
     return $self->session->privilege->insufficient()
         unless ( $self->session->user->isInGroup( $self->get('groupToEditSurvey') ) );
 
-    my $filename = $self->session->url->escape( $self->get("title") . "_structure.csv" );
-    
     $self->loadSurveyJSON();
     
-    my $content = '';
-    
-    for my $s (@{$self->survey->sections}) {
-        $s->{variable} = 'Undefined!' if not defined $s->{variable} or $s->{variable} eq '';
-        $content .= "<b>$s->{variable}</b> &ldquo;$s->{title}&rdquo;</b>";
-        $content .= '<ul>';
-        for my $q (@{$s->{questions}}) {
-            $q->{variable} = 'Undefined!' if not defined $q->{variable} or $q->{variable} eq '';
-            $content .= '<li>';
-            $content .= "<b>$q->{variable}</b> &ldquo;$q->{text}&rdquo;";
-            $content .= '<ul>';
-            for my $a (@{$q->{answers}}) {
-                $content .= '<li>';
-                $a->{value} = 'Undefined!' if not defined $a->{value} or $a->{value} eq ''; 
-                $content .= "($a->{value}) &ldquo;$a->{text}&rdquo;";
-                $content .= '</li>';
+    if ($self->session->form->param('format') eq 'html') {
+        my $output = '';
+        
+        for my $s (@{$self->survey->sections}) {
+            $output .= "(<b>$s->{variable}</b>) &ldquo;$s->{title}&rdquo;</b>";
+            $output .= '<ul>';
+            for my $q (@{$s->{questions}}) {
+                $output .= '<li>';
+                $output .= "(<b>$q->{variable}</b>) &ldquo;$q->{text}&rdquo;";
+                $output .= '<ul>';
+                for my $a (@{$q->{answers}}) {
+                    $output .= '<li>';
+                    $output .= "(<b>$a->{value}</b>) &ldquo;$a->{text}&rdquo;";
+                    $output .= '</li>';
+                }
+                $output .= '</ul>';
+                $output .= '</li>';
             }
-            $content .= '</ul>';
-            $content .= '</li>';
+            $output .= '</ul>';
         }
-        $content .= '</ul>';
+        return $output;
+    } else {
+        my @rows = ([qw( type variable value text )]);
+        for my $s (@{$self->survey->sections}) {
+            push @rows, ['Section', $s->{variable}, '', $s->{text}];
+            for my $q (@{$s->{questions}}) {
+                push @rows, ['Question', $q->{variable}, '', $q->{text}];
+                for my $a (@{$q->{answers}}) {
+                    push @rows, ['Answer', '', $a->{value}, $a->{text}];
+                }
+            }
+        }
+        
+        use Text::CSV_XS;
+        my $csv = Text::CSV_XS->new( { binary => 1 } );
+        my @lines = map {$csv->combine(@$_); $csv->string} @rows;
+        my $output = join "\n", @lines;
+        
+        my $filename = $self->session->url->escape( $self->get("title") . "_structure.csv" );
+        $self->session->http->setFilename($filename,"text/csv");
+        
+        return $output;
     }
-    
-    return $content;
 }
 
 #-------------------------------------------------------------------
