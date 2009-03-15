@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 #-------------------------------------------------------------------
-# WebGUI is Copyright 2001-2008 Plain Black Corporation.
+# WebGUI is Copyright 2001-2009 Plain Black Corporation.
 #-------------------------------------------------------------------
 # Please read the legal notices (docs/legal.txt) and the license
 # (docs/license.txt) that came with this distribution before using
@@ -93,7 +93,7 @@ checkModule("HTML::Highlight",              0.20         );
 checkModule("HTML::TagFilter",              0.07         );
 checkModule("HTML::Template",               2.9          );
 checkModule("HTML::Template::Expr",         0.05,      2 );
-checkModule("XML::FeedPP",                  0.36         );
+checkModule("XML::FeedPP",                  0.37         );
 checkModule("JSON",                         2.04         );
 checkModule("Config::JSON",                 "1.1.2"      );
 checkModule("Text::CSV_XS",                 "0.52"       );
@@ -120,6 +120,7 @@ checkModule("List::MoreUtils",              "0.22"       );
 checkModule("File::Path",                   "2.04"       );
 checkModule("Module::Find",                 "0.06"       );
 checkModule("Class::C3",                    "0.19"       );
+checkModule("Params::Validate",             "0.81"       );
 checkModule("GraphViz",                     "2.00"       );
 
 failAndExit("Required modules are missing, running no more checks.") if $missingModule;
@@ -432,6 +433,6 @@ Shows this documentation, then exits.
 
 =head1 AUTHOR
 
-Copyright 2001-2008 Plain Black Corporation.
+Copyright 2001-2009 Plain Black Corporation.
 
 =cut

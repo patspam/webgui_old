@@ -3,7 +3,7 @@ package WebGUI::Asset::Sku;
 =head1 LEGAL
 
  -------------------------------------------------------------------
-  WebGUI is Copyright 2001-2008 Plain Black Corporation.
+  WebGUI is Copyright 2001-2009 Plain Black Corporation.
  -------------------------------------------------------------------
   Please read the legal notices (docs/legal.txt) and the license
   (docs/license.txt) that came with this distribution before using
@@ -290,6 +290,31 @@ Returns undef. Should be overridden by any skus that have images.
 sub getThumbnailUrl {
     my $self = shift;
     return undef;
+}
+
+#-------------------------------------------------------------------
+=head2 getVendorId ( )
+
+Returns the vendorId of the vendor for this sku. Defaults to the default 
+vendor with id defaultvendor000000000.
+
+=cut
+
+sub getVendorId {
+    my $self = shift;
+    return 'defaultvendor000000000';
+}
+
+#-------------------------------------------------------------------
+
+=head2 getVendorPayout ( )
+
+Returns the amount that should be payed to the vendor for this sku.
+
+=cut
+
+sub getVendorPayout {
+    return 0;
 }
 
 #-------------------------------------------------------------------

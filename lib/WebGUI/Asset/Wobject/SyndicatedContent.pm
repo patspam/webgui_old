@@ -1,7 +1,7 @@
 package WebGUI::Asset::Wobject::SyndicatedContent;
 
 #-------------------------------------------------------------------
-# WebGUI is Copyright 2001-2008 Plain Black Corporation.
+# WebGUI is Copyright 2001-2009 Plain Black Corporation.
 #-------------------------------------------------------------------
 # Please read the legal notices (docs/legal.txt) and the license
 # (docs/license.txt) that came with this distribution before using
@@ -146,7 +146,10 @@ sub generateFeed {
             $value = $cache->setByHTTP($url, $self->get("cacheTimeout"));
             $newlyCached = 1;
         }
-        utf8::downgrade($value);
+        # if the content can be downgraded, it is either valid latin1 or didn't have
+        # an HTTP Content-Encoding header.  In the second case, XML::FeedPP will take
+        # care of any encoding specified in the XML prolog
+        utf8::downgrade($value, 1);
         eval {
             my $singleFeed = XML::FeedPP->new($value, utf8_flag => 1);
             $feed->merge($singleFeed);

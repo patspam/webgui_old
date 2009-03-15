@@ -1,7 +1,7 @@
 package WebGUI::Asset::Wobject::Gallery;
 
 #-------------------------------------------------------------------
-# WebGUI is Copyright 2001-2008 Plain Black Corporation.
+# WebGUI is Copyright 2001-2009 Plain Black Corporation.
 #-------------------------------------------------------------------
 # Please read the legal notices (docs/legal.txt) and the license
 # (docs/license.txt) that came with this distribution before using
@@ -1104,6 +1104,7 @@ sub www_addAlbumService {
         description     => $form->get('synopsis','textarea'),
         synopsis        => $form->get('synopsis','textarea'),
         othersCanAdd    => $form->get('othersCanAdd','yesNo'),
+        ownerUserId     => $session->user->userId,
     });
     
     $album->requestAutoCommit;
@@ -1349,11 +1350,13 @@ sub www_search {
 
     if ( $doSearch ) {
         # Keywords to search on
-        my $keywords        = join " ", $form->get('basicSearch'),
-                                        $form->get('keywords'),
-                                        $form->get('title'),
-                                        $form->get('description')
-                                        ;
+        # Do not add a space to the
+        my $keywords;
+        FORMVAR: foreach my $formVar (qw/ basicSearch keywords title description /) {
+            my $var = $form->get($formVar);
+            next FORMVAR unless $var;
+            $keywords = join ' ', $keywords, $var;
+        }
 
         # Build a where clause from the advanced options
         # Lineage search can capture gallery
@@ -1372,6 +1375,16 @@ sub www_search {
             $where      .= q{ AND assetData.ownerUserId = }
                         . $db->quote( $form->get("userId") )
                         ;
+        }
+
+        my $dateAfter  = $form->get("creationDate_after", "dateTime");
+        my $dateBefore = $form->get("creationDate_before", "dateTime");
+        my $creationDate = {};
+        if ($dateAfter) {
+            $creationDate->{start} = $dateAfter;
+        }
+        if ($dateBefore) {
+            $creationDate->{end  } = $dateBefore;
         }
 
         # Classes
@@ -1407,6 +1420,7 @@ sub www_search {
                 keywords        => $keywords,
                 where           => $where,
                 joinClass       => $joinClass,
+                creationDate    => $creationDate,
             } );
         
         $var->{ keywords }  = $keywords;

@@ -1,7 +1,7 @@
 package WebGUI::Asset::Wobject::GalleryAlbum;
 
 #-------------------------------------------------------------------
-# WebGUI is Copyright 2001-2008 Plain Black Corporation.
+# WebGUI is Copyright 2001-2009 Plain Black Corporation.
 #-------------------------------------------------------------------
 # Please read the legal notices (docs/legal.txt) and the license
 # (docs/license.txt) that came with this distribution before using
@@ -44,7 +44,7 @@ sub definition {
     my $class       = shift;
     my $session     = shift;
     my $definition  = shift;
-    my $i18n        = __PACKAGE__->i18n($session);
+    my $i18n        = WebGUI::International->new($session, 'Asset_GalleryAlbum');
 
     tie my %properties, 'Tie::IxHash', (
         allowComments   => {
@@ -352,27 +352,6 @@ sub DESTROY {
 
 #----------------------------------------------------------------------------
 
-=head2 i18n ( session )
-
-Get a WebGUI::International object for this class. 
-
-Can be called as a class method, in which case a WebGUI::Session object
-must be passed in.
-
-NOTE: This method can NOT be inherited, due to a current limitation 
-in the i18n system. You must ALWAYS call this with C<__PACKAGE__>
-
-=cut
-
-sub i18n {
-    my $self    = shift;
-    my $session = shift;
-    
-    return WebGUI::International->new($session, "Asset_GalleryAlbum");
-}
-
-#----------------------------------------------------------------------------
-
 =head2 getAutoCommitWorkflowId ( )
 
 Returns the workflowId of the Gallery's approval workflow.
@@ -558,7 +537,7 @@ sub getTemplateVars {
 
     # Add some specific vars from the Gallery
     my $galleryVar      = $gallery->getTemplateVars;
-    for my $key ( qw{ title menuTitle url } ) {
+    for my $key ( qw{ title menuTitle url displayTitle } ) {
         $var->{ "gallery_" . $key } = $galleryVar->{ $key };
     }
 
@@ -668,7 +647,8 @@ sub prepareView {
         = WebGUI::Asset::Template->new($self->session, $templateId);
     $template->prepare($self->getMetaDataAsTemplateVariables);
 
-    $self->{_viewTemplate} = $template;
+    $self->{_viewTemplate}  = $template;
+    $self->{_viewVariables} = $self->getTemplateVars;
 }
 
 #----------------------------------------------------------------------------
@@ -773,6 +753,20 @@ sub sendChunkedContent {
 
 #----------------------------------------------------------------------------
 
+=head2 update ( )
+
+Override update to force isHidden=1 on all albums.
+
+=cut
+
+sub update {
+    my $self        = shift;
+    my $properties  = shift;
+    return $self->SUPER::update({ %{ $properties }, isHidden=>1 });
+}
+
+#----------------------------------------------------------------------------
+
 =head2 view ( )
 
 method called by the www_view method.  Returns a processed template
@@ -783,7 +777,7 @@ to be displayed within the page style.
 sub view {
     my $self        = shift;
     my $session     = $self->session;	
-    my $var         = $self->getTemplateVars;
+    my $var         = delete $self->{_viewVariables};
     
     my $p           = $self->getFilePaginator;
     $p->appendTemplateVars( $var );
@@ -937,7 +931,7 @@ sub www_addArchiveSave {
 
     my $session     = $self->session;
     my $form        = $self->session->form;
-    my $i18n        = __PACKAGE__->i18n( $session );
+    my $i18n        = WebGUI::International->new( $session, 'Asset_GalleryAlbum' );
     my $properties  = {
         keywords        => $form->get("keywords"),
         friendsOnly     => $form->get("friendsOnly"),
@@ -1025,6 +1019,7 @@ sub www_addFileService {
         title           => $form->get('title','text'),
         description     => $form->get('synopsis','textarea'),
         synopsis        => $form->get('synopsis','textarea'),
+        ownerUserId     => $session->user->userId,
     });
 
     my $storage = $file->getStorageLocation;
@@ -1093,7 +1088,7 @@ sub www_deleteConfirm {
     return $self->session->privilege->insufficient unless $self->canEdit;
 
     my $gallery     = $self->getParent;
-    my $i18n        = __PACKAGE__->i18n( $self->session );
+    my $i18n        = WebGUI::International->new( $self->session, 'Asset_GalleryAlbum' );
 
     $self->purge;
     
@@ -1119,7 +1114,7 @@ sub www_edit {
     my $session     = $self->session;
     my $form        = $self->session->form;
     my $var         = $self->getTemplateVars;
-    my $i18n        = __PACKAGE__->i18n($session);
+    my $i18n        = WebGUI::International->new($session, 'Asset_GalleryAlbum');
 
     return $session->privilege->insufficient unless $self->canEdit;
 
@@ -1299,7 +1294,7 @@ Provides links to view the album.
 
 sub www_showConfirmation {
     my $self        = shift;
-    my $i18n        = __PACKAGE__->i18n( $self->session );
+    my $i18n        = WebGUI::International->new( $self->session, 'Asset_GalleryAlbum' );
 
     my $output      = '<p>' . sprintf( $i18n->get('save message'), $self->getUrl ) . '</p>'
                     . '<p>' . $i18n->get('what next') . '</p>'

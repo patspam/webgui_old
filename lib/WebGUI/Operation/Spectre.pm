@@ -1,7 +1,7 @@
 package WebGUI::Operation::Spectre;
 
 #-------------------------------------------------------------------
-# WebGUI is Copyright 2001-2008 Plain Black Corporation.
+# WebGUI is Copyright 2001-2009 Plain Black Corporation.
 #-------------------------------------------------------------------
 # Please read the legal notices (docs/legal.txt) and the license
 # (docs/license.txt) that came with this distribution before using
@@ -97,7 +97,7 @@ sub www_spectreGetSiteData {
 		}
 		$siteData{cron} = \@schedules;
 	}
-	return JSON::encode_json(\%siteData);
+	return JSON::to_json(\%siteData);
 }
 
 #-------------------------------------------------------------------
@@ -164,7 +164,10 @@ sub www_spectreStatus {
 
 =head2 www_spectreTest (  )
 
-Spectre executes this function to see if WebGUI connectivity is working.
+Spectre executes this function to see if WebGUI connectivity is working.  Note, the subnet checking
+is done in here because it is only, ever intended that Spectre use this method.  If a user were to
+call this method, it would lie, since it would be checking if the user's IP address was a valid
+spectreSubnet, instead of checking the IP address of the spectre process.
 
 =cut
 
@@ -172,24 +175,12 @@ sub www_spectreTest {
 	my $session = shift;
 	$session->http->setMimeType("text/plain");
 	$session->http->setCacheControl("none");
-    return WebGUI::Operation::Spectre::spectreTest($session);
-}
 
-#-------------------------------------------------------------------
-
-=head2 spectreTest (  )
-
-Spectre executes this function to see if WebGUI connectivity is working.
-
-=cut
-
-sub spectreTest{
-	my $session = shift;
     my $subnets = $session->config->get("spectreSubnets");
-
     if (!defined $subnets) {
         $subnets = [];
     }
+
     my $sessionIp = $session->env->getIp;
 	unless (isInSubnet($sessionIp, $subnets)) {
 		$session->errorHandler->security(
@@ -198,6 +189,20 @@ sub spectreTest{
         );
         return "subnet";
 	}
+    return WebGUI::Operation::Spectre::spectreTest($session);
+}
+
+#-------------------------------------------------------------------
+
+=head2 spectreTest (  )
+
+Spectre executes this function to see if WebGUI connectivity is working.  It does not
+do subnet checking, yet.
+
+=cut
+
+sub spectreTest{
+	my $session = shift;
 	my $remote = create_ikc_client(
 		port=>$session->config->get("spectrePort"),
 		ip=>$session->config->get("spectreIp"),
@@ -209,6 +214,13 @@ sub spectreTest{
 	my $result = $remote->post_respond('admin/ping');
 	$remote->disconnect;
 	return "spectre" unless defined $result;
+    ##A real spectre subnet test would go here, and would consist of the following
+    ##events:
+    ## 1) WebGUI talks to spectre.
+    ## 2) Spectre makes a request of WebGUI
+    ## 3) WebGUI returns a token or an error
+    ## 4) spectre returns the result of the request to WebGUI
+    ## 5) WebGUI lets the user know how it all ended up.
 	return "success";
 }
 

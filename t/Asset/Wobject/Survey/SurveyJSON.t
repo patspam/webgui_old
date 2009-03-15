@@ -22,7 +22,7 @@ my $session = WebGUI::Test->session;
 
 #----------------------------------------------------------------------------
 # Tests
-my $tests = 134;
+my $tests = 132;
 plan tests => $tests + 1 + 3;
 
 #----------------------------------------------------------------------------
@@ -126,10 +126,10 @@ skip $tests, "Unable to load SurveyJSON" unless $usedOk;
 #
 ####################################################
 
-$surveyJSON = WebGUI::Asset::Wobject::Survey::SurveyJSON->new('{}', $session->log);
+$surveyJSON = WebGUI::Asset::Wobject::Survey::SurveyJSON->new($session, '{}');
 isa_ok($surveyJSON, 'WebGUI::Asset::Wobject::Survey::SurveyJSON');
 
-my $sJSON2 = WebGUI::Asset::Wobject::Survey::SurveyJSON->new(undef, $session->log);
+my $sJSON2 = WebGUI::Asset::Wobject::Survey::SurveyJSON->new($session);
 isa_ok($sJSON2, 'WebGUI::Asset::Wobject::Survey::SurveyJSON', 'even with absolutely no JSON');
 undef $sJSON2;
 
@@ -173,9 +173,8 @@ cmp_deeply(
     'new: empty JSON in constructor causes 1 new, default section to be created',
 );
 
-$surveyJSON = WebGUI::Asset::Wobject::Survey::SurveyJSON->new(
+$surveyJSON = WebGUI::Asset::Wobject::Survey::SurveyJSON->new($session, 
     '{ "sections" : [], "survey" : {} }',
-    $session->log,
 );
 
 cmp_deeply(
@@ -188,16 +187,14 @@ cmp_deeply(
 
 lives_ok
     {
-        my $foo = WebGUI::Asset::Wobject::Survey::SurveyJSON->new(
+        my $foo = WebGUI::Asset::Wobject::Survey::SurveyJSON->new($session, 
             encode_json({survey => "on 16\x{201d}" }),
-            $session->log
         );
     }
     'new handles wide characters';
 
-$sJSON2 = WebGUI::Asset::Wobject::Survey::SurveyJSON->new(
+$sJSON2 = WebGUI::Asset::Wobject::Survey::SurveyJSON->new($session, 
     '{ "sections" : [ { "type" : "section" } ], "survey" : {} }',
-    $session->log,
 );
 
 cmp_deeply(
@@ -276,7 +273,7 @@ cmp_deeply(
 #
 ####################################################
 
-$surveyJSON = WebGUI::Asset::Wobject::Survey::SurveyJSON->new('{}', $session->log);
+$surveyJSON = WebGUI::Asset::Wobject::Survey::SurveyJSON->new($session, '{}');
 {
     my $section = $surveyJSON->section([0]);
     $section->{title} = 'Section 0';
@@ -1883,7 +1880,7 @@ cmp_deeply(
                 verbatim => $index == 4 ? 1 : 0,
                 recordedAnswer => $index++,
             })
-        } 'Democratic party', 'Republican party (or GOP)', 'Independant party', 'Other party (verbatim)',
+        } 'Democratic party', 'Republican party (or GOP)', 'Independent party', 'Other party (verbatim)',
     ],
     'updateQuestionAnswers: Party type'
 );
@@ -2009,7 +2006,7 @@ cmp_deeply(
 #
 ####################################################
 {
-    my $s = WebGUI::Asset::Wobject::Survey::SurveyJSON->new();
+    my $s = WebGUI::Asset::Wobject::Survey::SurveyJSON->new($session, '{}');
     is($s->totalSections, 1, 'a');
     is($s->totalQuestions, 0, 'a');
     is($s->totalAnswers, 0, 'a');
@@ -2077,12 +2074,7 @@ cmp_deeply(
 #
 ####################################################
 
-WebGUI::Test->interceptLogging;
-
-my $logger = $surveyJSON->log("Everyone in here is innocent");
-is ($WebGUI::Test::logger_warns, undef, 'Did not log a warn');
-is ($WebGUI::Test::logger_info,  undef, 'Did not log an info');
-is ($WebGUI::Test::logger_error, "Everyone in here is innocent", 'Logged an error');
+isa_ok($surveyJSON->session, 'WebGUI::Session', 'session() accessor works');
 
 }
 
@@ -2098,7 +2090,7 @@ is ($WebGUI::Test::logger_error, "Everyone in here is innocent", 'Logged an erro
 sub summarizeSectionSkeleton {
     my ($skeleton) = @_;
     my $summary = [];
-    foreach my $section (@{ $skeleton->{sections} }) {
+    foreach my $section (@{ $skeleton->{_sections} }) {
         my $summarySection = {
             title     => $section->{title},
             questions => [],
@@ -2159,6 +2151,7 @@ sub getBareSkeletons {
            terminal               => 0,
            terminalUrl            => '',
            goto                   => '',
+           gotoExpression         => '',
            timeLimit              => 0,
            type                   => 'section',
            questions              => [],
@@ -2179,6 +2172,8 @@ sub getBareSkeletons {
            textInButton           => 0,
            type                   => 'question',
            answers                => [],
+           goto                   => '',
+           gotoExpression         => '',
         },
         {
            text                   => '',

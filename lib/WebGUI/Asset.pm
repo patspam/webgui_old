@@ -3,7 +3,7 @@ package WebGUI::Asset;
 =head1 LEGAL
 
  -------------------------------------------------------------------
-  WebGUI is Copyright 2001-2008 Plain Black Corporation.
+  WebGUI is Copyright 2001-2009 Plain Black Corporation.
  -------------------------------------------------------------------
   Please read the legal notices (docs/legal.txt) and the license
   (docs/license.txt) that came with this distribution before using
@@ -183,7 +183,8 @@ sub assetExists {
 
 =head2 canAdd ( session, [userId, groupId] )
 
-Verifies that the user has the privileges necessary to add this type of asset. Return a boolean.
+Verifies that the user has the privileges necessary to add this type of asset and that the requested asset
+can be added as a child of this asset. Return a boolean.
 
 A class method.
 
@@ -225,7 +226,8 @@ sub canAdd {
     my $subclassGroupId = shift;
     my $addPrivsGroup = $session->config->get("assets/".$className."/addGroup");
     my $groupId = $addPrivsGroup || $subclassGroupId || '12';
-    return $user->isInGroup($groupId);
+    my $validParent = $className->validParent($session);
+    return $user->isInGroup($groupId) && $validParent;
 }
 
 
@@ -1998,13 +2000,12 @@ sub outputWidgetMarkup {
     # we'll be serializing the content of the asset which is being widgetized. 
     my $storage         = WebGUI::Storage->get($session, $assetId);
     my $content         = $self->view;
-    if($styleTemplateId eq '' or $styleTemplateId eq 'none'){
-        $content = $self->session->style->userStyle($content); 
-    }else{
+    if($styleTemplateId ne '' && $styleTemplateId ne 'none'){
         $content = $self->session->style->process($content,$styleTemplateId); 
     }
     WebGUI::Macro::process($session, \$content);
-    my $jsonContent     = to_json( { "asset$assetId" => { content => $content } } );
+    my ($headTags, $body) = WebGUI::HTML::splitHeadBody($content);
+    my $jsonContent     = to_json( { "asset$assetId" => { content => $body } } );
     $storage->addFileFromScalar("$assetId.js", "data = $jsonContent");
     my $jsonUrl         = $storage->getUrl("$assetId.js");
 
@@ -2035,6 +2036,7 @@ sub outputWidgetMarkup {
             }
             YAHOO.util.Event.addListener(window, 'load', setupPage);
         </script>
+        $headTags
     </head>
     <body id="widget$assetId">
         \${asset$assetId.content}
@@ -2482,6 +2484,22 @@ sub urlExists {
 	return $test;
 }
 
+
+#-------------------------------------------------------------------
+
+=head2 validParent ( )
+
+Make sure that the current session asset is a valid parent for the child and return true or false.
+For example, a WikiPage would check for a WikiMaster.  It should be overridden by those children
+that need to perform that kind of check.
+
+This is a class method.
+
+=cut
+
+sub validParent {
+    return 1;
+}
 
 #-------------------------------------------------------------------
 

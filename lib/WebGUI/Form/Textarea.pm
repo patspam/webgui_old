@@ -3,7 +3,7 @@ package WebGUI::Form::Textarea;
 =head1 LEGAL
 
  -------------------------------------------------------------------
-  WebGUI is Copyright 2001-2008 Plain Black Corporation.
+  WebGUI is Copyright 2001-2009 Plain Black Corporation.
  -------------------------------------------------------------------
   Please read the legal notices (docs/legal.txt) and the license
   (docs/license.txt) that came with this distribution before using
@@ -159,11 +159,16 @@ sub toHtml {
         $url->extras( 'yui-webgui/build/form/textarea.js' ), 
         { type => 'text/javascript' }, 
     );
-    $style->setRawHeadTags( q|
-        <script type="text/javascript">
-            YAHOO.util.Event.onDOMReady( function () { WebGUI.Form.Textarea.setMaxLength() } );
-        </script>
-    | );
+
+    unless ( $self->session->stow->get( 'texareaHeadTagsLoaded' ) ) {
+        $style->setRawHeadTags( q|
+            <script type="text/javascript">
+                YAHOO.util.Event.onDOMReady( function () { WebGUI.Form.Textarea.setMaxLength() } );
+            </script>
+        | );
+
+        $self->session->stow->set( 'texareaHeadTagsLoaded', 1 )
+    }
 
 	if ($self->get("resizable")) {
         $style->setLink($url->extras("resize.css"), {type=>"text/css", rel=>"stylesheet"});

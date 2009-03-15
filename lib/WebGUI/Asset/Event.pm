@@ -5,7 +5,7 @@ use strict;
 our $VERSION = "0.0.0";
 
 ####################################################################
-# WebGUI is Copyright 2001-2008 Plain Black Corporation.
+# WebGUI is Copyright 2001-2009 Plain Black Corporation.
 ####################################################################
 # Please read the legal notices (docs/legal.txt) and the license
 # (docs/license.txt) that came with this distribution before using
@@ -116,7 +116,7 @@ sub definition {
         },
         'storageId' => {
             fieldType       => "Image",
-            defaultValue    => undef,
+            defaultValue    => '',
             maxAttachments  => 1,
         },
         'feedUid' => {
@@ -1854,6 +1854,22 @@ sub update {
     return $self->SUPER::update({%$properties, isHidden => 1});
 }
 
+
+#-------------------------------------------------------------------
+
+=head2 validParent
+
+Make sure that the current session asset is a Calendar for pasting and adding checks.
+
+This is a class method.
+
+=cut
+
+sub validParent {
+    my $class   = shift;
+    my $session = shift;
+    return $session->asset->isa('WebGUI::Asset::Wobject::Calendar');
+}
 
 ####################################################################
 

@@ -1,6 +1,6 @@
 # vim:syntax=perl
 #-------------------------------------------------------------------
-# WebGUI is Copyright 2001-2008 Plain Black Corporation.
+# WebGUI is Copyright 2001-2009 Plain Black Corporation.
 #-------------------------------------------------------------------
 # Please read the legal notices (docs/legal.txt) and the license
 # (docs/license.txt) that came with this distribution before using
@@ -41,7 +41,7 @@ my $originalExportPath = $session->config->get('exportPath');
 
 my $testRan = 1;
 
-plan tests => 146;        # Increment this number for each test you create
+plan tests => 144;        # Increment this number for each test you create
 
 #----------------------------------------------------------------------------
 # exportCheckPath()
@@ -280,6 +280,8 @@ my $properties = {
     title       => 'Export Test',
     className   => 'WebGUI::Asset::File',
     url         => 'export-test.pl',
+    storageId   => $storage->getId,
+    filename    => 'somePerlFile_pl.txt',
 };
 my $defaultAsset = WebGUI::Asset->getDefault($session);
 my $asset = $defaultAsset->addChild($properties, $properties->{id});
@@ -436,18 +438,12 @@ is($@, '', 'exportWriteFile for perl file works');
 
 ok(-e $asset->exportGetUrlAsPath->absolute->stringify, "exportWriteFile actually writes the perl file");
 
-eval { $content = WebGUI::Test->getPage($asset, 'exportHtml_view') };
-is(scalar $asset->exportGetUrlAsPath->absolute->slurp, $content, "exportWriteFile puts correct content in exported perl file");
-
 $guidPath->rmtree;
 $asset = WebGUI::Asset->new($session, 'ExportTest000000000002');
 eval { $asset->exportWriteFile() };
 is($@, '', 'exportWriteFile for plain file works');
 
 ok(-e $asset->exportGetUrlAsPath->absolute->stringify, "exportWriteFile actuall writes the plain file");
-
-eval { $content = WebGUI::Test->getPage($asset, 'exportHtml_view') };
-is(scalar $asset->exportGetUrlAsPath->absolute->slurp, $content, "exportWriteFile puts correct content in exported plain file");
 
 $guidPath->rmtree;
 
@@ -933,7 +929,7 @@ SKIP: {
     eval { ($success, $message) = $home->exportAsHtml( { userId => 3, depth => 99 } ) };
     is($@,       '', "exportAsHtml catches inaccessible exportPath ");
     is($success, 0,  "exportAsHtml returns 0 for inaccessible exportPath");
-    is($message, "can't access " . $inaccessibleDirectory->stringify, "exportAsHtml returns correct message for inaccessible exportPath");
+    is($message, "can't create exportPath " . $inaccessibleDirectory->stringify, "exportAsHtml returns correct message for inaccessible exportPath");
 }
 
 # exportPath is a file, not a directory
