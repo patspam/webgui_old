@@ -147,6 +147,8 @@ sub create {
     # Work out the next highest sequence number
     my $sequenceNumber = $session->db->quickScalar('select max(sequenceNumber) from fluxRule');
     $sequenceNumber = $sequenceNumber ? $sequenceNumber + 1 : 1;
+    
+    my @expressions = $properties_ref->{expressions} ? @{delete $properties_ref->{expressions}} : ();
 
     # Create a bare-minimum entry in the db..
     my $id = $session->db->setRow(
@@ -157,8 +159,16 @@ sub create {
 
     delete $properties_ref->{fluxRuleId};    # doesn't need to be passed to update (below)
 
-    # (re-)retrieve entry and apply user-supplied properties..
+    # (re-)retrieve entry
     my $rule = $class->new( $session, $id );
+    
+    # add any supplied Expressions (do this before calling update so that the user can
+    # specify combinedExpressions in the same call and not have an exception thrown)
+    for my $expression (@expressions) {
+        $rule->addExpression($expression);
+    }
+    
+    # and finally, update with any user-supplied options
     $rule->update($properties_ref);
 
     return $rule;
