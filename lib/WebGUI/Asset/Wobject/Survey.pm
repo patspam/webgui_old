@@ -182,6 +182,17 @@ sub definition {
             autoGenerate => 0,
             noFormPost  => 1, 
         },
+        onSurveyEndWorkflowId => {
+            tab          => 'properties',
+            defaultValue => undef,
+            type         => 'WebGUI::Asset::Wobject::Survey',
+            fieldType    => 'workflow',
+            label        => 'Survey End Workflow',
+            hoverHelp    => 'Workflow to run when user completes the Survey',
+            #            label           => $i18n->get('editForm workflowIdAddEntry label'),
+            #            hoverHelp       => $i18n->get('editForm workflowIdAddEntry description'),
+            none => 1,
+        },
     );
 
     push @{$definition}, {
@@ -928,6 +939,47 @@ sub getResponseInfoForView {
 
 #-------------------------------------------------------------------
 
+=head2 newByResponseId ( responseId )
+
+Class method. Instantiates a Survey instance from the given L<"responseId">, and loads the
+user response into the Survey instance.
+
+=head3 responseId
+
+An existing L<"responseId">. Will be loaded even if the response isComplete.
+
+=cut
+
+sub newByResponseId {
+    my $class = shift;
+    my ($session, $responseId) = validate_pos(@_, {isa => 'WebGUI::Session'}, { type => SCALAR });
+    
+    my ($assetId, $userId) = $session->db->quickArray('select assetId, userId from Survey_response where Survey_responseId = ?',
+        [$responseId]);
+    
+    if (!$assetId) {
+        $session->log->warn("ResponseId not bound to valid assetId: $responseId");
+        return;
+    }
+    
+    if (!$userId) {
+        $session->log->warn("ResponseId not bound to valid userId: $responseId");
+        return;
+    }
+    
+    if (my $survey = $class->new($session, $assetId)) {
+        # Set the responseId manually rather than calling $self->responseId so that we
+        # can load a response regardless of whether it's marked isComplete
+        $survey->{responseId} = $responseId;
+        return $survey;
+    } else {
+        $session->log->warn("Unable to instantiate Asset for assetId: $assetId");
+        return;
+    }
+}
+
+#-------------------------------------------------------------------
+
 =head2 www_takeSurvey
 
 The take survey page does very little. It is a simple shell (controlled by surveyTakeTemplateId).
@@ -1104,7 +1156,6 @@ sub surveyEnd {
     $completeCode = defined $completeCode ? $completeCode : 1;
 
     if ( my $responseId = $self->responseId ) {
-         #    $self->session->db->write("update Survey_response set endDate = ? and isComplete > 0 where Survey_responseId = ?",[WebGUI::DateTime->now->toDatabase,$responseId]);
         $self->session->db->setRow(
             'Survey_response',
             'Survey_responseId', {
@@ -1113,7 +1164,20 @@ sub surveyEnd {
                 isComplete        => $completeCode
             }
         );
-    }
+        
+         # Trigger workflow
+        if ( my $workflowId = $self->get('onSurveyEndWorkflowId') ) {
+            $self->session->log->debug("Triggering onSurveyEndWorkflowId workflow: $workflowId");
+            WebGUI::Workflow::Instance->create(
+                $self->session,
+                {   workflowId => $workflowId,
+                    methodName => 'newByResponseId',
+                    className  => 'WebGUI::Asset::Wobject::Survey',
+                    parameters => $responseId,
+                }
+            )->start;
+        }
+    } 
     if ($self->get('doAfterTimeLimit') eq 'restartSurvey' && $completeCode == 2){
         $self->responseJSON->startTime(scalar time);
         undef $self->{_responseJSON};
@@ -1293,7 +1357,7 @@ sub responseIdCookies {
 
 #-------------------------------------------------------------------
 
-=head2 responseId
+=head2 responseId( [userId] )
 
 Accessor for the responseId property, which is the unique identifier for a single 
 L<WebGUI::Asset::Wobject::Survey::ResponseJSON> instance. See also L<"responseJSON">.
@@ -1301,15 +1365,22 @@ L<WebGUI::Asset::Wobject::Survey::ResponseJSON> instance. See also L<"responseJS
 The responseId of the current user is returned, or created if one does not already exist.
 If the user is anonymous, the IP is used. Or an emailed or linked code can be used.
 
+=head3 userId (optional)
+
+If specified, this user is used rather than the current user 
+
 =cut
 
 sub responseId {
     my $self = shift;
+    my ($userId) = validate_pos(@_, {type => SCALAR, optional => 1});
+    
+    my $user = WebGUI::User->new($self->session, $userId);
 
     if (!defined $self->{responseId}) {
     
         my $ip = $self->session->env->getIp;
-        my $id = $self->session->user->userId;
+        my $id = $userId || $self->session->user->userId;
         my $anonId = $self->session->form->process('userid');
         if ($self->responseIdCookies) {
             $anonId ||= $self->session->http->getCookies->{Survey2AnonId}; ## no critic
@@ -1366,7 +1437,7 @@ sub responseId {
                         Survey_responseId => 'new',
                         userId            => $id,
                         ipAddress         => $ip,
-                        username          => $self->session->user->username,
+                        username          => $user ? $user->username : $self->session->user->username,
                         startDate         => scalar time,                      #WebGUI::DateTime->now->toDatabase,
                         endDate           => 0,                                #WebGUI::DateTime->now->toDatabase,
                         assetId           => $self->getId(),
