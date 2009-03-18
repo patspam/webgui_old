@@ -276,7 +276,8 @@ sub createAccountSave {
         my $var;
         $var->{newUser_username} = $username;
         $var->{activationUrl} = $session->url->page("op=auth;method=validateEmail;key=".$key, 'full');
-        my $text = WebGUI::Asset::Template->new($self->session,$self->getSetting('accountActivationTemplate'))->process($var);
+        my $text =
+WebGUI::Asset::Template->new($self->session,$self->getSetting('accountActivationTemplate'))->process($var);
         WebGUI::Macro::process($self->session,\$text);
         $mail->addText($text);
         $mail->addFooter;
@@ -642,7 +643,7 @@ sub editUserSettingsFormSave {
 	$s->set("webguiLoginTemplate", $f->process("webguiLoginTemplate","template"));
 	$s->set("webguiPasswordRecoveryTemplate", $f->process("webguiPasswordRecoveryTemplate","template"));
     $s->set("webguiWelcomeMessageTemplate", $f->process("webguiWelcomeMessageTemplate","template"));
-    $s->set("webguiAccountActivationTemplate", $f->process("webguiAccountActivationTemplate","template"));
+    $s->set("webguiAccountActivationTemplate", $f->process("webguiAccountActivationTemplate","template")); 
 
     if (@errors) {
         return \@errors;

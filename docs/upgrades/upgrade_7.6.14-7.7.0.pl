@@ -33,12 +33,14 @@ my $session = start(); # this line required
 
 # upgrade functions go here
 
+addAccountActivationTemplateToSettings( $session );
 addGroupToAddToMatrix( $session );
 addScreenshotTemplatesToMatrix( $session );
 surveyDoAfterTimeLimit($session);
 surveyRemoveResponseTemplate($session);
 surveyEndWorkflow($session);
 installAssetHistory($session);
+addMinimumCartCheckoutSetting( $session );
 
 # Passive Analytics
 pa_installLoggingTables($session);
@@ -53,6 +55,16 @@ addTransactionItemFlags( $session );
 createShopAcccountPluginSettings( $session );
 
 finish($session); # this line required
+
+
+#----------------------------------------------------------------------------
+sub addAccountActivationTemplateToSettings {
+    my $session = shift;
+    print "\tAdding account activation template to settings \n" unless $quiet;
+
+    $session->db->write("insert into settings (name, value) values ('webguiAccountActivationTemplate','PBtmpl0000000000000016')");
+    print "Done.\n" unless $quiet;
+}
 
 #----------------------------------------------------------------------------
 sub addGroupToAddToMatrix {
@@ -303,9 +315,19 @@ sub addTransactionItemFlags {
 #----------------------------------------------------------------------------
 sub createShopAcccountPluginSettings {
     my $session = shift;
-    print "Creating default settings for the account plugin..." unless $quiet;
+    print "\tCreating default settings for the account plugin..." unless $quiet;
 
     $session->setting->add('shopMySalesTemplateId', '-zxyB-O50W8YnL39Ouoc4Q');
+
+    print "Done.\n" unless $quiet;
+}
+
+#----------------------------------------------------------------------------
+sub addMinimumCartCheckoutSetting {
+    my $session = shift;
+    print "\tAdding setting for minimum cart checkout..." unless $quiet;
+
+    $session->setting->add( 'shopCartCheckoutMinimum', '0.00' );
 
     print "Done.\n" unless $quiet;
 }
