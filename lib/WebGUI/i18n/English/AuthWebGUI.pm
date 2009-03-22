@@ -798,6 +798,10 @@ Settings screen, displayed as hoverhelp.|,
         context     => q{Error message when a user tries to recover password and they don't have an email address},
     },
 
+    'newUser_username' => {
+        message     => 'Username of registering user',
+    },
+
 };
 
 1;
