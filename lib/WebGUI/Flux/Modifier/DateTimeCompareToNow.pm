@@ -49,7 +49,15 @@ sub evaluate {
     # Assemble the ingredients..
     my $units = $self->args()->{units};
     my $duration = $self->args()->{duration};
-    my $dt = $self->operand()->clone; # clone in case client code is still using $dt
+    my $dt = $self->operand();
+    
+    if (!ref $dt) {
+        # Assume scalar operand is an epoch
+        $dt = DateTime->from_epoch( epoch => $dt);
+    } else { 
+        # Otherwise clone in case client code is still using $dt
+        $dt = $dt->clone;
+    }
     my $now = DateTime->now;
     
     $self->session->log->debug("Comparing $dt + ( $units => $duration ) with $now");
