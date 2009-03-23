@@ -1687,6 +1687,74 @@ sub www_exportTransposedResults {
 
 #-------------------------------------------------------------------
 
+sub www_exportStructure {
+    my $self = shift;
+
+    return $self->session->privilege->insufficient()
+        unless ( $self->session->user->isInGroup( $self->get('groupToEditSurvey') ) );
+    
+    if ($self->session->form->param('format') eq 'html') {
+        my $output = '<p>N.B. Items are formatted as: <pre>Numbering: (<b>variable|value</b>) &ldquo;$s->{title|text}&rdquo;</pre></p>';
+        
+        $output .= '<div style="border: 1px dashed; margin: 10px; padding: 10px;">';
+        
+        my $sNum = 1;
+        for my $s (@{$self->surveyJSON->sections}) {
+            $output .= "S$sNum: (<b>$s->{variable}</b>) &ldquo;$s->{title}&rdquo;";
+            $output .= '<ul>';
+            my $qNum = 0;
+            for my $q (@{$s->{questions}}) {
+                $qNum++;
+                $output .= '<li>';
+                $output .= "Q$qNum: (<b>$q->{variable}</b>) &ldquo;$q->{text}&rdquo;";
+                $output .= '<ul>';
+                my $aNum = 0;
+                for my $a (@{$q->{answers}}) {
+                    $aNum++;
+                    $output .= '<li>';
+                    $output .= "A$aNum: (<b>$a->{value}</b>) &ldquo;$a->{text}&rdquo;";
+                    $output .= '</li>';
+                }
+                $output .= '</ul>';
+                $output .= '</li>';
+            }
+            $output .= '</ul>';
+        }
+        $output .= '</div>';
+        
+        return $self->session->style->userStyle($output);
+    } else {
+        my @rows = ([qw( numbering type variable value text goto gotoExpression)]);
+        my $sNum = 0;
+        for my $s (@{$self->surveyJSON->sections}) {
+            $sNum++;
+            push @rows, ["S$sNum", 'Section', $s->{variable}, '', $s->{text}, $s->{goto}, ''];
+            my $qNum = 0;
+            for my $q (@{$s->{questions}}) {
+                $qNum++;
+                push @rows, ["S$sNum-Q$qNum", 'Question', $q->{variable}, '', $q->{text}, '', ''];
+                my $aNum = 0;
+                for my $a (@{$q->{answers}}) {
+                    $aNum++;
+                    push @rows, ["S$sNum-Q$qNum-A$aNum", 'Answer', '', $a->{value}, $a->{text}, $a->{goto}, $a->{gotoExpression}];
+                }
+            }
+        }
+        
+        use Text::CSV_XS;
+        my $csv = Text::CSV_XS->new( { binary => 1 } );
+        my @lines = map {$csv->combine(@$_); $csv->string} @rows;
+        my $output = join "\n", @lines;
+        
+        my $filename = $self->session->url->escape( $self->get("title") . "_structure.csv" );
+        $self->session->http->setFilename($filename,"text/csv");
+        
+        return $output;
+    }
+}
+
+#-------------------------------------------------------------------
+
 =head2 export($filename,$content)
 
 Exports the data in $content to $filename, then forwards the user to $filename.
