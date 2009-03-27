@@ -195,6 +195,10 @@ sub definition {
         },
     );
 
+    #my $defaultMC = $session->  
+
+    #%properties = ();
+
     push @{$definition}, {
             assetName         => $i18n->get('assetName'),
             icon              => 'survey.gif',
@@ -412,6 +416,10 @@ sub www_submitObjectEdit {
     }
     elsif ( $params->{copy} ) {
         return $self->copyObject( \@address );
+    }elsif( $params->{removetype} ){
+        return $self->removeType(\@address);        
+    }elsif( $params->{addtype} ){
+        return $self->addType($params->{addtype},\@address);        
     }
 
     # Update the addressed object
@@ -489,6 +497,27 @@ sub www_jumpTo {
     # Search failed, so return the Edit Survey page instead.
     $self->session->log->debug("Unable to find id: $id");
     return $self->www_editSurvey;
+}
+
+#-------------------------------------------------------------------
+
+sub removeType{
+    my $self = shift;
+    my $address = shift;
+    $self->surveyJSON->removeType($address);
+    return $self->www_loadSurvey( { address => $address } );
+    
+}
+
+#-------------------------------------------------------------------
+
+sub addType{
+    my $self = shift;
+    my $name = shift;
+    my $address = shift;
+    $self->surveyJSON->addType($name,$address);
+    $self->persistSurveyJSON();
+    return $self->www_loadSurvey( { address => $address } );
 }
 
 #-------------------------------------------------------------------
@@ -1208,17 +1237,18 @@ Sends the processed template and questions structure to the client
 
 sub prepareShowSurveyTemplate {
     my ( $self, $section, $questions ) = @_;
-    my %multipleChoice = (
-        'Multiple Choice', 1, 'Gender',        1, 'Yes/No',     1, 'True/False', 1, 'Ideology',       1,
-        'Race',            1, 'Party',         1, 'Education',  1, 'Scale',      1, 'Agree/Disagree', 1,
-        'Oppose/Support',  1, 'Importance',    1, 'Likelihood', 1, 'Certainty',  1, 'Satisfaction',   1,
-        'Confidence',      1, 'Effectiveness', 1, 'Concern',    1, 'Risk',       1, 'Threat',         1,
-        'Security',        1
-    );
+#    my %multipleChoice = (
+#        'Multiple Choice', 1, 'Gender',        1, 'Yes/No',     1, 'True/False', 1, 'Ideology',       1,
+#        'Race',            1, 'Party',         1, 'Education',  1, 'Scale',      1, 'Agree/Disagree', 1,
+#        'Oppose/Support',  1, 'Importance',    1, 'Likelihood', 1, 'Certainty',  1, 'Satisfaction',   1,
+#        'Confidence',      1, 'Effectiveness', 1, 'Concern',    1, 'Risk',       1, 'Threat',         1,
+#        'Security',        1
+#    );
     my %textArea    = ( 'TextArea', 1 );
     my %text        = ( 'Text', 1, 'Email', 1, 'Phone Number', 1, 'Text Date', 1, 'Currency', 1 );
     my %slider      = ( 'Slider', 1, 'Dual Slider - Range', 1, 'Multi Slider - Allocate', 1 );
     my %dateType    = ( 'Date',        1, 'Date Range', 1 );
+    my %dateShort   = ( 'Year Month', 1 );
     my %fileUpload  = ( 'File Upload', 1 );
     my %hidden      = ( 'Hidden',      1 );
 
@@ -1227,7 +1257,7 @@ sub prepareShowSurveyTemplate {
         elsif ( $text{ $q->{questionType} } )       { $q->{textType}     = 1; }
         elsif ( $textArea{ $q->{questionType} } )   { $q->{textAreaType} = 1; }
         elsif ( $hidden{ $q->{questionType} } )     { $q->{hidden}       = 1; }
-        elsif ( $multipleChoice{ $q->{questionType} } ) {
+        elsif ( $self->surveyJSON->multipleChoiceTypes->{ $q->{questionType} } ) {
             $q->{multipleChoice} = 1;
             if ( $q->{maxAnswers} > 1 ) {
                 $q->{maxMoreOne} = 1;
@@ -1235,6 +1265,26 @@ sub prepareShowSurveyTemplate {
         }
         elsif ( $dateType{ $q->{questionType} } ) {
             $q->{dateType} = 1;
+        }
+        elsif ( $dateShort{ $q->{questionType} } ) {
+            $q->{dateShort} = 1;
+            foreach my $a(@{$q->{answers}}){
+                $a->{months} = [ 
+                             {'month' => ''},
+                             {'month' => 'January'},
+                             {'month' => 'February'},
+                             {'month' => 'March'},
+                             {'month' => 'April'},
+                             {'month' => 'May'},
+                             {'month' => 'June'},
+                             {'month' => 'July'},
+                             {'month' => 'August'},
+                             {'month' => 'September'},
+                             {'month' => 'October'},
+                             {'month' => 'November'},
+                             {'month' => 'December'}
+                            ];
+            }
         }
         elsif ( $slider{ $q->{questionType} } ) {
             $q->{slider} = 1;

@@ -343,6 +343,7 @@ sub duplicateThing {
 
 }
 
+
 #-------------------------------------------------------------------
 
 =head2 deleteField ( fieldId , thingId )
@@ -1479,7 +1480,7 @@ sub www_deleteFieldConfirm {
 
 #-------------------------------------------------------------------
 
-=head2 www_deleteFieldConfirm ( )
+=head2 www_duplicateThing ( )
 
 Duplicates a Thing.
 
@@ -1774,7 +1775,7 @@ sub www_editThing {
             ."  <td style='width:100px;' valign='top' class='formDescription'>".$field->{label}."</td>\n"
             ."  <td style='width:370px;'>".$formElement."</td>\n"
             ."  <td style='width:120px;' valign='top'> <input onClick=\"editListItem('".$self->session->url->page()
-            ."?func=editField;fieldId=".$field->{fieldId}.";thingId=".$thingId."','".$field->{fieldId}."')\" value='".$i18n->get('Edit','Icon')."' type='button'>" 
+            ."?func=editField;fieldId=".$field->{fieldId}.";thingId=".$thingId."','".$field->{fieldId}."')\" value='Edit' type='button'>"
             ." <input onClick=\"editListItem('".$self->session->url->page()
             ."?func=editField;copy=1;fieldId=".$field->{fieldId}.";thingId=".$thingId."','".$field->{fieldId}
             ."','copy')\" value='Copy' type='button'>"
@@ -2118,14 +2119,15 @@ Returns the html for a pop-up dialog to add or edit a field.
 
 sub www_editField {
 
-    my $self = shift;
+    my $self    = shift;
+    my $session = $self->session;
     my (%properties,$thingId,$fieldId,$dialogBody);
-    return $self->session->privilege->insufficient() unless $self->canEdit;
-    $fieldId = $self->session->form->process("fieldId");
-    $thingId = $self->session->form->process("thingId");
-    %properties = $self->session->db->quickHash("select * from Thingy_fields where thingId=? and fieldId=? and assetId=?",
+    return $session->privilege->insufficient() unless $self->canEdit;
+    $fieldId = $session->form->process("fieldId");
+    $thingId = $session->form->process("thingId");
+    %properties = $session->db->quickHash("select * from Thingy_fields where thingId=? and fieldId=? and assetId=?",
         [$thingId,$fieldId,$self->get("assetId")]);
-    if($self->session->form->process("copy")){
+    if($session->form->process("copy")){
         $properties{oldFieldId} = $properties{fieldId};
         $properties{fieldId}    = 'new';
         $properties{label}      = $properties{label}.' (copy)';
@@ -2216,9 +2218,6 @@ sub www_editFieldSave {
         ."<td style='width:370px;'>".$formElement."</td>\n"
         ."<td style='width:120px;' valign='top'> <input onClick=\"editListItem('".$self->session->url->page()
         ."?func=editField;fieldId=".$newFieldId.";thingId=".$properties{thingId}."','".$newFieldId."')\" value='".$i18n->get('Edit','Icon')."' type='button'>"
-        ." <input onClick=\"editListItem('".$self->session->url->page()
-            ."?func=editField;copy=1;fieldId=".$newFieldId.";thingId=".$properties{thingId}."','".$newFieldId
-            ."','copy')\" value='Copy' type='button'>"
         ."<input onClick=\"deleteListItem('".$self->session->url->page()."','".$newFieldId
         ."','".$properties{thingId}."')\" value='".$i18n->get('Delete','Icon')."' type='button'></td>\n</tr>\n</table>";
 

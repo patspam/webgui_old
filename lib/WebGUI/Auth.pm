@@ -304,8 +304,8 @@ sub createAccountSave {
         $var->{newUser_password}    = $password;
         my $message = WebGUI::Asset::Template->new($self->session,$self->getSetting('welcomeMessageTemplate'))->process($var);
         WebGUI::Macro::process($self->session,\$message);
-		WebGUI::Inbox->new($self->session)->addMessage({
-			message	=> $message,
+        WebGUI::Inbox->new($self->session)->addMessage({
+            message => $message,
 			subject	=> $i18n->get(870),
 			userId	=> $self->userId,
             status  => 'completed',

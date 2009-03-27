@@ -14,7 +14,7 @@
 
 use FindBin;
 use strict;
-use lib "$FindBin::Bin/lib";
+use lib "$FindBin::Bin/../lib";
 use Test::More;
 use WebGUI::Test; # Must use this before any other WebGUI modules
 use WebGUI::Session;
@@ -30,22 +30,23 @@ my $session         = WebGUI::Test->session;
 plan tests => 7;        # Increment this number for each test you create
 
 #----------------------------------------------------------------------------
-# Test the creation of WebGUI::Account
+# Test the creation of WebGUI::Account::Friends
 
-# Can we load WebGUI::Account?
-use_ok( "WebGUI::Account" );
+# Can we load it?
+use_ok( "WebGUI::Account::Friends" );
 
 SKIP: { # Not everyone has Test::Exception yet
     eval { require Test::Exception; import Test::Exception };
     # Skip 1 test if Test::Exception couldn't be loaded
     skip 1, 'Test::Exception not found' if $@;
-    throws_ok( sub { WebGUI::Account->new }, 'WebGUI::Error::InvalidObject', 
+    throws_ok( sub { WebGUI::Account::Friends->new }, 'WebGUI::Error::InvalidObject', 
         'new() throws exception without session object'
     );
 };
 
-my $account;
+my $friends;
 # ok() tests booleans. assignment evaluates to the value assigned (it's how '$a = $b = 4' works)
+my $account;
 ok( $account = WebGUI::Account->new( $session ), 
     "WebGUI::Account object created successfully" 
 );

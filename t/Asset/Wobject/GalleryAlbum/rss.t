@@ -74,7 +74,7 @@ $oldSettings{ specialState  } = $session->setting->get( 'specialState' );
 $session->setting->set( 'specialState', '' );
 
 my ( $mech );
-my $baseUrl         = 'http://' . $session->config->get('sitename')->[0];
+my $baseUrl         = $session->url->getSiteURL;
 
 #----------------------------------------------------------------------------
 # Tests
