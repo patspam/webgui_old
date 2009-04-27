@@ -345,6 +345,13 @@
       "title" : "^International(manage graphics,Graphics);",
       "groupSetting" : "groupIdAdminGraphics"
    },
+   "passiveAnalytics" : {
+      "icon" : "passiveAnalytics.png",
+      "uiLevel" : 1,
+      "url" : "^PageUrl(\"\",op=passiveAnalytics;func=editRuleflow);",
+      "title" : "^International(Passive Analytics,PassiveAnalytics);",
+      "groupSetting" : "3"
+   },
    "shop" : {
       "icon" : "shop.gif",
       "uiLevel" : 5,
@@ -492,6 +499,9 @@
    },
    "WebGUI::Asset::Wobject::DataForm" : {
       "category" : "basic"
+   },
+   "WebGUI::Asset::Sku::Ad" : {
+      "category" : "shop"
    },
    "WebGUI::Asset::Sku::Donation" : {
       "category" : "shop"
@@ -811,11 +821,14 @@
         "WebGUI::Workflow::Activity::NotifyAdminsWithOpenVersionTags",
         "WebGUI::Workflow::Activity::PurgeOldAssetRevisions",
         "WebGUI::Workflow::Activity::PurgeOldTrash",
+        "WebGUI::Workflow::Activity::RemoveOldCarts",
         "WebGUI::Workflow::Activity::SendQueuedMailMessages",
         "WebGUI::Workflow::Activity::SummarizePassiveProfileLog",
         "WebGUI::Workflow::Activity::SyncProfilesToLdap",
         "WebGUI::Workflow::Activity::TrashClipboard",
-        "WebGUI::Workflow::Activity::TrashExpiredEvents"
+        "WebGUI::Workflow::Activity::TrashExpiredEvents",
+        "WebGUI::Workflow::Activity::SummarizePassiveAnalytics",
+        "WebGUI::Workflow::Activity::BucketPassiveAnalytics"
     ],
     "WebGUI::Asset::Wobject::Thingy" : [
         "WebGUI::Workflow::Activity::NotifyAboutThing"
@@ -900,6 +913,7 @@
     "WebGUI::Content::Referral",
     "WebGUI::Content::AssetManager",
     "WebGUI::Content::AssetDiscovery",
+    "WebGUI::Content::PassiveAnalytics",
     "WebGUI::Content::AjaxI18N",
     "WebGUI::Content::Account",
     "WebGUI::Content::AssetHistory",

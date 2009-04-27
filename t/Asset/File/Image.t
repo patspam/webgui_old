@@ -39,6 +39,7 @@ $rectangle->setBackgroundColor('#0000FF');
 
 ##Create a storage location
 my $storage = WebGUI::Storage->create($session);
+WebGUI::Test->storagesToDelete($storage);
 
 ##Save the image to the location
 $rectangle->saveToStorageLocation($storage, 'blue.png');
@@ -89,7 +90,7 @@ $asset->getStorageLocation->crop($asset->get("filename"), 100, 125, 10, 25);
 my @stat_after = stat($filename);
 is(isnt_array(\@stat_before, \@stat_after), 1, 'Image is different after crop');
 
-my $sth = $session->db->read('describe imageAsset annotations');
+my $sth = $session->db->read('describe ImageAsset annotations');
 isnt($sth->hashRef, undef, 'Annotations column is defined');
 
 is($storage->getId, $asset->get('storageId'), 'Asset updated with correct new storageId');

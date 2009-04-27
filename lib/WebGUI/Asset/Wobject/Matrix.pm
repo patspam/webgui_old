@@ -155,7 +155,7 @@ sub definition {
                                 lineage         => $i18n->get('sort by asset rank label'),
                                 lastUpdated     => $i18n->get('sort by last updated label'),
                               },
-            defaultValue    =>"score",
+            defaultValue    =>"title",
             hoverHelp       =>$i18n->get('default sort description'),
             label           =>$i18n->get('default sort label'),
         },
@@ -193,6 +193,20 @@ sub definition {
             defaultValue    =>"#aaffaa",
             hoverHelp       =>$i18n->get('compare color yes description'),
             label           =>$i18n->get('compare color yes label'),
+        },
+        maxScreenshotWidth=>{
+            fieldType       =>"integer",
+            tab             =>"display",
+            defaultValue    =>"800",
+            hoverHelp       =>$i18n->get('max screenshot width description'),
+            label           =>$i18n->get('max screenshot width label'),
+        },
+        maxScreenshotHeight=>{
+            fieldType       =>"integer",
+            tab             =>"display",
+            defaultValue    =>"600",
+            hoverHelp       =>$i18n->get('max screenshot height description'),
+            label           =>$i18n->get('max screenshot height label'),
         },
         categories=>{
             fieldType       =>"textarea",
@@ -567,6 +581,8 @@ sub view {
         $varStatistics = JSON->new->decode($varStatisticsEncoded);
     }
     else{
+        $varStatistics->{alphanumeric_sortButton}   = "<span id='sortByName'><button type='button'>Sort by name</button></span><br />";
+
         # Get the MatrixListing with the most views as an object using getLineage.
         my ($bestViews_listing) = @{ $self->getLineage(['descendants'], {
             includeOnlyClasses  => ['WebGUI::Asset::MatrixListing'],
@@ -629,7 +645,7 @@ sub view {
                         lastUpdated => $self->session->datetime->epochToHuman($lastUpdatedListing->get('lastUpdated'),"%z")
                     });
         }
-        $var->{lastUpdated_sortButton}  = "<span id='sortByUpdated'><button type='button'>Sort by updated</button></span><br />";
+        $varStatistics->{lastUpdated_sortButton}  = "<span id='sortByUpdated'><button type='button'>Sort by updated</button></span><br />";
 
         # For each category, get the MatrixListings with the best ratings.
 
@@ -1010,6 +1026,9 @@ sub www_getCompareFormData {
     my $form            = $session->form;
     my $sort            = shift || $session->scratch->get('matrixSort') || $self->get('defaultSort');
     my $sortDirection   = ' desc';
+    if ($sort eq 'title'){
+        $sortDirection = ' asc';
+    }
     
     my @listingIds = $session->form->checkList("listingId");
     
@@ -1299,7 +1318,7 @@ sub www_search {
                 $options{'blank'}       = 'blank';
                 $attribute->{options}   = \%options;
                 $attribute->{value}     = 'blank';
-                $attribute->{extras}    = "style='width:120px'";
+                $attribute->{extras}    .= " style='width:120px'";
             }
             $attribute->{form} = WebGUI::Form::DynamicField->new($self->session,%{$attribute})->toHtml;
             push(@attribute_loop,$attribute);

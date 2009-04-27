@@ -67,6 +67,10 @@ our $I18N = {
 		message => q|Delete|,
 		lastUpdated => 1224686319
 	},
+	'warnings' => {
+        message => q|Warnings|,
+        lastUpdated => 0
+    },
 	'section number' => {
 		message => q|Section Number:|,
 		lastUpdated => 1224686319
@@ -251,9 +255,9 @@ our $I18N = {
 		lastUpdated => 1224686319
 	},
     'show text in button description' => {
-        message => q|Select if the buttons of a multiple choice question display the answer values or not.|,
+        message => q|By default multiple choice answer buttons show the answer text above each button. Change this to have the text appear inside of the buttons.|,
         context => q|Description of the 'show text in button' field, used as hoverhelp in the edit question dialog.|,
-        lastUpdated => 0
+        lastUpdated => 1239251986
     },
 	'allow comment' => {
 		message => q|Allow comment:|,
@@ -300,14 +304,14 @@ our $I18N = {
         context => q|Description of the 'required' field, used as hoverhelp in the edit question dialog.|,
         lastUpdated => 0
     },
-	'question value' => {
-		message => q|Question value:|,
+	'question score' => {
+		message => q|Question score:|,
 		lastUpdated => 1224686319
 	},
-    'question value description' => {
-        message => q|Enter a value for this question.|,
+    'question score description' => {
+        message => q|Default score to use for answers in this question that don't have an answer score value set.|,
         context => q|Description of the 'question value' field, used as hoverhelp in the edit question dialog.|,
-        lastUpdated => 0
+        lastUpdated => 1239255403
     },
 	'please enter answer information' => {
 		message => q|Please enter answer information:|,
@@ -333,13 +337,13 @@ our $I18N = {
         lastUpdated => 0
     },
 	'recorded answer' => {
-		message => q|Answer title:|,
+		message => q|Recorded Answer:|,
 		lastUpdated => 1224686319
 	},
     'recorded answer description' => {
-        message => q|Text to display inside multiple-choice answer buttons (only if 'Show text in button' is enabled for this question).|,
+        message => q|Determines what gets recorded as the response value if this answer is selected. Allows you to 'recode' recorded responses, e.g. 'Yes' could be recorded as '1' and 'No' as '0'. Relevant only for Multiple Choice questions (other question types record the input actually entered by the user: free text, selected date, etc..).|,
         context => q|Description of the 'recorded answer' field, used as hoverhelp in the edit answer dialog.|,
-        lastUpdated => 0
+        lastUpdated => 1239251436
     },
 	'jump to' => {
 		message => q|Jump to:|,
@@ -355,9 +359,9 @@ our $I18N = {
         lastUpdated => 0
     },
     'jump expression description' => {
-        message => q|An expression used to control complex branching based user responses to previous questions. A branch expression is made up of a list of rules, one per line, along with a branch target for each rule. |,
+        message => q|An expression used to control complex branching based user responses to previous questions. Ignored unless enableSurveyExpressionEngine enabled in your site config file.|,
         context => q|Description of the 'jump expression' field, used as hoverhelp in the edit answer dialog.|,
-        lastUpdated => 0
+        lastUpdated => 1239259550
     },
 	'text answer' => {
 		message => q|TextArea|,
@@ -368,7 +372,7 @@ our $I18N = {
 		lastUpdated => 1224686319
 	},
     'is this the correct answer description' => {
-        message => q|Select wether this is the correct answer or not.|,
+        message => q|Select whether this is the correct answer or not.|,
         context => q|Description of the 'is this the correct answer' field, used as hoverhelp in the edit answer dialog.|,
         lastUpdated => 0
     },
@@ -416,14 +420,14 @@ our $I18N = {
         context => q|Description of the 'verbatim' field, used as hoverhelp in the edit answer dialog.|,
         lastUpdated => 0
     },
-	'answer value' => {
-		message => q|Answer value:|,
-		lastUpdated => 1224686319
+	'answer score' => {
+		message => q|Answer score:|,
+		lastUpdated => 1239251986
 	},
-    'answer value description' => {
-        message => q|Assign a numeric scores to this answers. Used in question scoring and jump expressions.|,
-        context => q|Description of the 'answer value' field, used as hoverhelp in the edit answer dialog.|,
-        lastUpdated => 0
+    'answer score description' => {
+        message => q|Assign a numeric score to this answer. If blank, the question score value will used instead. Used in question scoring and jump expressions.|,
+        context => q|Description of the 'answer score' field, used as hoverhelp in the edit answer dialog.|,
+        lastUpdated => 1239251986
     },
 	'checked' => {
 		message => q|Checked|,
@@ -474,6 +478,14 @@ Survey's edit screen|,
         lastUpdated => 0,
         context => q|The message shown to the user taking the survey when the survey is restarted after reaching
 the time limit for completing the survey. This message is in the 'take survey' template.|,
+    },
+    'Quiz mode summaries' => {
+        message     => q|Show quiz mode summaries?|,
+        lastUpdated => 0,
+    },
+    'Quiz mode summaries help' => {
+        message     => q|When set, summaries are shown to users giving their quiz results.|,
+        lastUpdated => 0,
     },
     'Show user their progress' => {
         message     => q|Show user their progress?|,
@@ -564,6 +576,16 @@ the time limit for completing the survey. This message is in the 'take survey' t
         message     => q|The template used to display the Survey Edit screen.|,
         lastUpdated => 0,
     },
+    
+    'Allow back button' => {
+        message     => q|Allow back button|,
+        lastUpdated => 0,
+    },
+
+    'Allow back button help' => {
+        message     => q|Allow the user to navigate backwards in a Survey.|,
+        lastUpdated => 0,
+    },
 
     'Max user responses' => {
         message => q|Max user responses|,
@@ -606,6 +628,18 @@ the time limit for completing the survey. This message is in the 'take survey' t
 
     'Edit Survey Template help' => {
         message => q|The template for displaying the screen for editing the survey.|,
+        lastUpdated => 0
+    },
+    
+    'Survey Summary Template' => {
+        message => q|Survey Summary Template|,
+        context => q|The template for displaying the summary page to users.|,
+        lastUpdated => 0
+    },
+    
+    'Survey Summary Template help' => {
+        message => q|This is the template shown to users in quiz mode to summarize their results.|,
+        context => q|The template for displaying the summary page to users.|,
         lastUpdated => 0
     },
 
@@ -852,37 +886,37 @@ directly inside the answer_loop for other types of questions.|,
     },
 
     'lastResponseCompleted' => {
-        message => q|A boolean indicating wether the current user's last response was completed.|,
+        message => q|A boolean indicating whether the current user's last response was completed.|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
     },
 
     'lastResponseTimedOut' => {
-        message => q|A boolean indicating wether the current user's last response timed out.|,
+        message => q|A boolean indicating whether the current user's last response timed out.|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
     },
 
     'maxResponsesSubmitted' => {
-        message => q|A boolean indicating wether the current user has reached the maximum number of responses.|,
+        message => q|A boolean indicating whether the current user has reached the maximum number of responses.|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
     },
 
     'user_canTakeSurvey' => {
-        message => q|A boolean indicating wether the current user can take the survey.|,
+        message => q|A boolean indicating whether the current user can take the survey.|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
     },
 
     'user_canViewReports' => {
-        message => q|A boolean indicating wether the current user can view the survey reports.|,
+        message => q|A boolean indicating whether the current user can view the survey reports.|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
     },
 
     'user_canEditSurvey' => {
-        message => q|A boolean indicating wether the current user can edit the survey.|,
+        message => q|A boolean indicating whether the current user can edit the survey.|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
     },
@@ -960,9 +994,9 @@ directly inside the answer_loop for other types of questions.|,
     },
 
     'maxResponsesPerUser' => {
-        message => q|The number of times the user can attempt to get the correct answer on each question. The default is 1.|,
+        message => q|The number of times the user can attempt to get the correct answer on each question. 0 means unlimited. The default is 1.|,
         context => q|Description of a template variable for a template Help page.|,
-        lastUpdated => 1168643566,
+        lastUpdated => 1238131023,
     },
 
     'survey questions template title' => {
@@ -984,15 +1018,25 @@ directly inside the answer_loop for other types of questions.|,
     },
 
     'totalQuestions' => {
-        message => q|A boolean indicating wether the user should see the total number of answers and the number of questions that have already been answered.|,
+        message => q|A boolean indicating whether the user should see the total number of answers and the number of questions that have already been answered.|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
     },
 
     'showTimeLimit' => {
-        message => q|A boolean indicating wether the number of minutes until the survey times out should be displayed.|,
+        message => q|A boolean indicating whether the number of minutes until the survey times out should be displayed.|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
+    },
+
+    'isLastPage' => {
+        message => q|A boolean indicating whether this is the last page of the survey.|,
+        context => q|Description of a template variable for a template Help page.|,
+    },
+
+    'allowBackBtn' => {
+        message => q|A boolean indicating whether the back button is allowed.|,
+        context => q|Description of a template variable for a template Help page.|,
     },
 
     'minutesLeft' => {
@@ -1214,7 +1258,7 @@ section/answer.|,
     },
 
     'randomizeAnswers' => {
-        message => q|A boolean indicating wether this question's answers should be randomized.|,
+        message => q|A boolean indicating whether this question's answers should be randomized.|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
     },
@@ -1262,7 +1306,7 @@ section/answer.|,
     },
 
     'textInButton' => {
-        message => q|A boolean indicating whether the buttons for answers to multiple choice questions should display the answer's text.|,
+        message => q|A boolean indicating whether the buttons for answers to multiple choice questions should display the answer's text inside or above.|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
     },
@@ -1298,7 +1342,7 @@ section/answer.|,
     },
 
     'recordedAnswer' => {
-        message => q|The value that gets recorded for this answer in the database.|,
+        message => q|Determines what gets recorded as the response value if this answer is selected. Allows you to 'recode' recorded responses, e.g. 'Yes' could be recorded as '1' and 'No' as '0'. Relevant only for Multiple Choice questions (other question types record the input actually entered by the user: free text, selected date, etc..).|,
         context => q|Description of a template variable for a template Help page.|,
         lastUpdated => 0,
     },
@@ -1342,6 +1386,36 @@ section/answer.|,
     'max' => {
         message => q|The max value of this answer for slider type questions..|,
         context => q|Description of a template variable for a template Help page.|,
+        lastUpdated => 0,
+    },
+    
+    'year' => {
+        message => q|Year (YYYY):|,
+        context => q|Sub-label for "Year Month" question type|,
+        lastUpdated => 0,
+    },
+    
+    'month' => {
+        message => q|Month:|,
+        context => q|Sub-label for "Year Month" question type|,
+        lastUpdated => 0,
+    },
+    
+    'back' => {
+        message => q|Back|,
+        context => q|Back button label on Take Survey page|,
+        lastUpdated => 0,
+    },
+    
+    'continue' => {
+        message => q|Continue|,
+        context => q|Continue button label on Take Survey page|,
+        lastUpdated => 0,
+    },
+    
+    'finish' => {
+        message => q|Finish|,
+        context => q|Finish button label on Take Survey page|,
         lastUpdated => 0,
     },
 

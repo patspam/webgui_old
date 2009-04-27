@@ -256,7 +256,7 @@ sub dateCreated {
 
 =head2 delete ( )
 
-Deletes this group and all references to it.
+Deletes this group from the group related tables in the database and calls clearCaches.
 
 =cut
 
@@ -858,7 +858,7 @@ EOQ
 
 =head2 getUserList ( [ withoutExpired ] )
 
-Returns a hash reference with key of userId and value of username for users in the group
+Returns a hash reference with key of userId and value of username for users in the group, sorted by username.
 
 =head3 withoutExpired
 

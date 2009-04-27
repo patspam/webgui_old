@@ -94,6 +94,28 @@ sub definition {
 
 #-------------------------------------------------------------------
 
+=head2 getAddToCartForm ( )
+
+Returns a form to add this Sku to the cart.  Used when this Sku is part of
+a shelf.  Overrode master class to add price form.
+
+=cut
+
+sub getAddToCartForm {
+    my $self    = shift;
+    my $session = $self->session;
+    my $i18n = WebGUI::International->new($session, 'Asset_Donation');
+    return
+        WebGUI::Form::formHeader($session, {action => $self->getUrl})
+      . WebGUI::Form::hidden(    $session, {name => 'func',  value => 'donate'})
+      . WebGUI::Form::float(     $session, {name => 'price', defaultValue => $self->getPrice })
+      . WebGUI::Form::submit(    $session, {value => $i18n->get('donate button')})
+      . WebGUI::Form::formFooter($session)
+      ;
+}
+
+#-------------------------------------------------------------------
+
 =head2 getConfiguredTitle
 
 Returns title + price
@@ -162,7 +184,7 @@ sub view {
 
 #-------------------------------------------------------------------
 
-=head2 wwww_donate
+=head2 www_donate
 
 Accepts the information from the donation form and adds it to the cart.
 

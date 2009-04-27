@@ -292,18 +292,43 @@ sub duplicate {
     my $assetId = $self->get("assetId");
     my $fields;
 
+    my $otherThingFields = $db->buildHashRefOfHashRefs(
+        "select fieldType, fieldId, right(fieldType,22) as otherThingId, fieldInOtherThingId from Thingy_fields
+        where fieldType like 'otherThing_%' and assetId = ?",
+        [$assetId],'fieldInOtherThingId'
+    );
+
     my $things = $self->getThings;
     while ( my $thing = $things->hashRef) {
-        my $oldThingId = $thing->{thingId};
-        my $newThingId = $newAsset->addThing($thing,0);
+        my $oldSortBy   = $thing->{sortBy};
+        my $oldThingId  = $thing->{thingId};
+        my $newThingId  = $newAsset->addThing($thing,0);
         $fields = $db->buildArrayRefOfHashRefs('select * from Thingy_fields where assetId=? and thingId=?'
             ,[$assetId,$oldThingId]);
         foreach my $field (@$fields) {
             # set thingId to newly created thing's id.
             $field->{thingId} = $newThingId;
+        
+            my $originalFieldId = $field->{fieldId};
 
-            $newAsset->addField($field,0);
+            my $newFieldId = $newAsset->addField($field,0);
+            if ($originalFieldId eq $oldSortBy){
+                $self->session->db->write( "update Thingy_things set sortBy = ? where thingId = ?",
+                    [ $newFieldId, $newThingId ] );
+            }
+
+            if ($otherThingFields->{$originalFieldId}){
+                $otherThingFields->{$originalFieldId}->{newFieldType}   = 'otherThing_'.$newThingId;
+                $otherThingFields->{$originalFieldId}->{newFieldId}     = $newFieldId;
+            }
         }
+    }
+    foreach my $otherThingField (keys %$otherThingFields){
+        $db->write('update Thingy_fields set fieldType = ?, fieldInOtherThingId = ?
+                    where fieldInOtherThingId = ? and assetId = ?',
+                    [$otherThingFields->{$otherThingField}->{newFieldType},
+                    $otherThingFields->{$otherThingField}->{newFieldId},
+                    $otherThingFields->{$otherThingField}->{fieldInOtherThingId}, $newAsset->get('assetId')]);
     }
     return $newAsset;
 }
@@ -3154,6 +3179,9 @@ sub getSearchTemplateVars {
 
     $currentUrl = $self->getUrl();
     foreach ($self->session->form->param) {
+                                 # if we just saved data from an edit, we do not want to keep any of the params
+        last if $_ eq 'func' and $self->session->form->process($_) eq 'editThingDataSave';
+
         unless ($_ eq "pn" || $_ eq "op" || $_ =~ /identifier/xi || $_ =~ /password/xi || $_ eq "orderBy" ||
 $self->session->form->process($_) eq "") {
             $currentUrl = $self->session->url->append($currentUrl,$self->session->url->escape($_)
@@ -3262,10 +3290,16 @@ sequenceNumber');
             $templateVars{canEditThingData} = 1;
             $templateVars{searchResult_delete_icon} = $session->icon->delete('func=deleteThingDataConfirm;thingId='
             .$thingId.';thingDataId='.$thingDataId,$self->get("url"),$i18n->get('delete thing data warning'));
+            $templateVars{searchResult_delete_url} = $session->url->append($url,
+                'func=deleteThingDataConfirm;thingId='.$thingId.';thingDataId='.$thingDataId);
             $templateVars{searchResult_edit_icon} = $session->icon->edit('func=editThingData;thingId='
             .$thingId.';thingDataId='.$thingDataId,$self->get("url"));
+            $templateVars{searchResult_edit_url} = $session->url->append($url, 
+                'func=editThingData;thingId='.$thingId.';thingDataId='.$thingDataId);
             $templateVars{searchResult_copy_icon} = $session->icon->copy('func=copyThingData;thingId='
             .$thingId.';thingDataId='.$thingDataId,$self->get("url"));
+            $templateVars{searchResult_copy_url} = $session->url->append($url, 
+                'func=copyThingData;thingId='.$thingId.';thingDataId='.$thingDataId,);
         }
         push(@searchResult_loop,\%templateVars);
     }

@@ -88,6 +88,34 @@ sub deleteKeyword {
     $self->session->db->write("delete from assetKeyword where keyword=?", [$options->{keyword}]);
 }
 
+#-------------------------------------------------------------------
+
+=head2 findKeywords ( $options )
+
+Find keywords.
+
+=head3 $options
+
+A hashref of options to change the behavior of the method.
+
+=head4 asset
+
+Find all keywords for all assets below an asset, providing a WebGUI::Asset object.
+
+=head4 assetId
+
+Find all keywords for all assets below an asset, providing an assetId.
+
+=head4 search
+
+Find all keywords using the SQL clause LIKE.  This can be used in tandem with asset or assetId.
+
+=head4 limit
+
+Limit the number of keywords that are returned.
+
+=cut
+
 sub findKeywords {
     my $self = shift;
     my $options = shift;
@@ -148,7 +176,16 @@ site.
 
 =head3 maxKeywords
 
-The maximum number of keywords to display in the cloud. Defaults to 50. Valid range between 1 and 50, inclusive.
+The maximum number of keywords to display in the cloud. Defaults to 50. Valid range between 1 and 100, inclusive.
+
+=head3 urlCallback
+
+This is the name of a method that will be called on the displayAsset, or the startAsset to get the URL
+that elements in the tag cloud will link to.  The method will be passed the keyword as its first, and only argument.
+
+=head3 includeOnlyKeywords
+
+This is an arrayref of keywords.  The generated cloud will only contain these keywords.
 
 =cut
 

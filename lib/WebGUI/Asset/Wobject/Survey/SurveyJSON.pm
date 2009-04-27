@@ -48,13 +48,11 @@ likely operate on the question indexed by:
 
 use strict;
 use JSON;
+use Data::Dumper;
 use Params::Validate qw(:all);
 Params::Validate::validation_options( on_fail => sub { WebGUI::Error::InvalidParam->throw( error => shift ) } );
 
-# N.B. We're currently using Storable::dclone instead of Clone::clone
-# because Colin uncovered some Clone bugs in Perl 5.10
-#use Clone qw/clone/;
-use Storable qw/dclone/;
+use Clone qw/clone/;
 
 # The maximum value of questionsPerPage is currently hardcoded here
 my $MAX_QUESTIONS_PER_PAGE = 20;
@@ -112,12 +110,14 @@ Loads the Multiple Choice and Special Question types
 
 sub loadTypes {
     my $self = shift;
+
     @{$self->{specialQuestionTypes}} = ( 
         'Dual Slider - Range',
         'Multi Slider - Allocate',
         'Slider',
         'Currency',
         'Email',
+        'Number',
         'Phone Number',
         'Text',
         'Text Date',
@@ -127,9 +127,11 @@ sub loadTypes {
         'Date Range',
         'Year Month',
         'Hidden',
-    );
-    my $refs = $self->session->db->buildArrayRefOfHashRefs("SELECT questionType, answers FROM Survey_questionTypes");
-    map($self->{multipleChoiceTypes}->{$_->{questionType}} = [split/,/,$_->{answers}], @$refs);
+    ) if(! defined $self->{specialQuestionTypes});
+    if(! defined $self->{multipleChoiceTypes}){
+        my $refs = $self->session->db->buildArrayRefOfHashRefs("SELECT questionType, answers FROM Survey_questionTypes"); 
+        map($self->{multipleChoiceTypes}->{$_->{questionType}} = $_->{answers} ? from_json($_->{answers}) : {}, @$refs);
+    }
 }
 
 sub addType { 
@@ -137,11 +139,7 @@ sub addType {
     my $name = shift;
     my $address = shift;
     my $obj = $self->getObject($address);
-    my @answers;
-    for my $ans(@{$obj->{answers}}){
-        push(@answers,$ans->{text});
-    }
-    my $ansString = join(',',@answers);
+    my $ansString = $obj->{answers} ? to_json $obj->{answers} : {};
     $self->session->db->write("INSERT INTO Survey_questionTypes VALUES(?,?) ON DUPLICATE KEY UPDATE answers = ?",[$name,$ansString,$ansString]);
     $self->question($address)->{questionType} = $name;
 }
@@ -366,13 +364,13 @@ sub getObject {
     return if !$count;
     
     if ( $count == 1 ) {
-        return dclone $self->sections->[ sIndex($address) ];
+        return clone $self->sections->[ sIndex($address) ];
     }
     elsif ( $count == 2 ) {
-        return dclone $self->sections->[ sIndex($address) ]->{questions}->[ qIndex($address) ];
+        return clone $self->sections->[ sIndex($address) ]->{questions}->[ qIndex($address) ];
     }
     else {
-        return dclone $self->sections->[ sIndex($address) ]->{questions}->[ qIndex($address) ]->{answers}
+        return clone $self->sections->[ sIndex($address) ]->{questions}->[ qIndex($address) ]->{answers}
             ->[ aIndex($address) ];
     }
 }
@@ -393,7 +391,6 @@ sections, questions, or answers.
 sub getEditVars {
     my $self    = shift;
     my ($address) = validate_pos(@_, { type => ARRAYREF });
-
     # Figure out what to do by counting the number of elements in the $address array ref
     my $count = @{$address};
     
@@ -417,14 +414,17 @@ Generates the list of valid goto targets
 sub getGotoTargets {
     my $self = shift;
 
-    # Valid goto targets are all of the section variable names..
-    my @section_vars = map {$_->{variable}} @{$self->sections};
-
-    # ..and all of the question variable names..
-    my @question_vars = map {$_->{variable}} @{$self->questions};
-
-    # ..excluding the ones that are empty
-    return grep { $_ ne q{} } (@section_vars, @question_vars);
+    # Valid goto targets are all of the non-empty section variable names..
+    my @section_vars = grep { $_ ne q{} } map {$_->{variable}} @{$self->sections};
+    
+    # ..and all of the non-empty question variable names..
+    my @question_vars = grep { $_ ne q{} } map {$_->{variable}} @{$self->questions};
+    
+    # ..plus some special vars
+    my @special_vars = qw(NEXT_SECTION END_SURVEY);
+    
+    # ..all combined
+    return [ @section_vars, @question_vars, @special_vars ];
 }
 
 =head2 getSectionEditVars ( $address )
@@ -667,14 +667,30 @@ sub update {
         }
     }
 
+    $self->_handleSpecialAnswerUpdates($address,$properties); 
+
     # Update $object with all of the data in $properties
     while (my ($key, $value) = each %{$properties}) {
         if (defined $value) {
             $object->{$key} = $value;
         }
     }
-    
+
     return;
+}
+
+sub _handleSpecialAnswerUpdates{
+    my $self = shift;
+    my $address = shift;
+    my $properties = shift;
+    my $question = $self->question($address);
+    if($question->{questionType} =~ /^Slider|Multi Slider - Allocate|Dual Slider - Range$/){
+        for my $answer(@{$self->answers($address)}){
+            $answer->{max} = $properties->{max};
+            $answer->{min} = $properties->{min};
+            $answer->{step} = $properties->{step};
+        }
+    }
 }
 
 =head2 insertObject ( $object, $address )
@@ -727,15 +743,18 @@ sub insertObject {
     # Use splice to rearrange the relevant array of objects..
     if ( $count == 1 ) {
         splice @{ $self->sections($address) }, sIndex($address) +1, 0, $object;
+        $address->[0]++;
     }
     elsif ( $count == 2 ) {
         splice @{ $self->questions($address) }, qIndex($address) + 1, 0, $object;
+        $address->[1]++;
     }
     elsif ( $count == 3 ) {
         splice @{ $self->answers($address) }, aIndex($address) + 1, 0, $object;
+        $address->[2]++;
     }
     
-    return;
+    return $address;
 }
 
 =head2 copy ( $address )
@@ -777,14 +796,14 @@ sub copy {
     
     if ( $count == 1 ) {
         # Clone the indexed section onto the end of the list of sections..
-        push @{ $self->sections }, dclone $self->section($address);
+        push @{ $self->sections }, clone $self->section($address);
 
         # Update $address with the index of the newly created section
         $address->[0] = $self->lastSectionIndex;
     }
     elsif ( $count == 2 ) {
         # Clone the indexed question onto the end of the list of questions..
-        push @{ $self->questions($address) }, dclone $self->question($address);
+        push @{ $self->questions($address) }, clone $self->question($address);
 
         # Update $address with the index of the newly created question
         $address->[1] = $self->lastQuestionIndex($address);
@@ -988,16 +1007,8 @@ sub updateQuestionAnswers {
     }
     elsif ( my $answerBundle = $self->getMultiChoiceBundle($type) ) {
         # We found a known multi-choice bundle. 
-
-        # Mark any answer containing the string "verbatim" as verbatim
-        my $verbatims = {};
-        for my $answerIndex (0 .. $#$answerBundle) {
-            if ($answerBundle->[$answerIndex] =~ /\(verbatim\)/) {
-                $verbatims->{$answerIndex} = 1;
-            }
-        }
-        # Add the bundle of multi-choice answers, along with the verbatims hash
-        $self->addAnswersToQuestion( \@address_copy, $answerBundle, $verbatims );
+        # Add the bundle of multi-choice answers
+        $self->addAnswersToQuestion( \@address_copy, $answerBundle );
     } else {
         # Default action is to add a single, default answer to the question
         push @{ $question->{answers} }, $self->newAnswer();
@@ -1008,9 +1019,7 @@ sub updateQuestionAnswers {
 
 =head2 getMultiChoiceBundle
 
-Returns a list of answers for each multi-choice bundle.
-
-Currently these are hard-coded but soon they will live in the database.
+Returns a list of answer objects for each multi-choice bundle.
 
 =cut
 
@@ -1021,7 +1030,7 @@ sub getMultiChoiceBundle {
     return $self->{multipleChoiceTypes}->{$type};
 }
 
-=head2 addAnswersToQuestion ($address, $answers, $verbatims)
+=head2 addAnswersToQuestion ($address, $answers)
 
 Helper routine for updateQuestionAnswers.  Adds an array of answers to a question.
 
@@ -1034,39 +1043,20 @@ See L<"Address Parameter">. The address of the question to add answers to.
 An array reference of answers to add.  Each element will be assigned to the text field of
 the answer that is created.
 
-=head3 $verbatims
-
-An hash reference.  Each key is an index into the answers array.  The value is a placeholder
-for doing existance lookups.  For each requested index, the verbatim flag in the answer is
-set to true.
-
 =cut
 
 sub addAnswersToQuestion {
     my $self = shift;
-    my ( $address, $answers, $verbatims )
-        = validate_pos( @_, { type => ARRAYREF }, { type => ARRAYREF }, { type => HASHREF } );
+    my ( $address, $answers )
+        = validate_pos( @_, { type => ARRAYREF }, { type => ARRAYREF } );
 
     # Make a private copy of the $address arrayref that we can use locally
     # when updating answer text without causing side-effects for the caller's $address
     my @address_copy = @{$address};
-
-    for my $answer_index ( 0 .. $#{$answers} ) {
-
+    
+    for my $answer (@$answers) {
         # Add a new answer to question
-        push @{ $self->question( \@address_copy )->{answers} }, $self->newAnswer();
-
-        # Update address to point at newly created answer (so that we can update it)
-        $address_copy[2] = $answer_index;
-
-        # Update the answer appropriately
-        $self->update(
-            \@address_copy,
-            {   text           => $answers->[$answer_index],
-                recordedAnswer => $answer_index + 1,
-                verbatim       => $verbatims->{$answer_index},
-            }
-        );
+        push @{ $self->question( \@address_copy )->{answers} }, $answer;
     }
     
     return;
@@ -1192,6 +1182,124 @@ sub totalAnswers {
     }
 }
 
+=head2 validateSurvey ()
+
+Returns an array of messages to inform a user what is logically wrong with the Survey
+
+=cut
+
+sub validateSurvey{
+    my $self = shift;
+
+    my @messages;   
+   
+    #set up valid goto targets 
+    my $gotoTargets = $self->getGotoTargets();
+    my $goodTargets = {};
+    my $duplicateTargets;
+    for my $g (@{$gotoTargets}) { 
+        $goodTargets->{$g}++; 
+        $duplicateTargets->{$g}++ if $goodTargets->{$g} > 1;
+    }
+
+    #step through each section validating it. 
+    my $sections = $self->sections();
+    
+    for(my $s = 0; $s <= $#$sections; $s++){
+        my $sNum = $s + 1;
+        my $section = $self->section([$s]);
+        if(! $self->validateGoto($section,$goodTargets)){
+            push @messages,"Section $sNum has invalid Jump target: \"$section->{goto}\"";
+        }
+        if(! $self->validateGotoInfiniteLoop($section)){
+            push @messages,"Section $sNum jumps to itself.";
+        }
+        if(my $error = $self->validateGotoExpression($section,$goodTargets)){
+            push @messages,"Section $sNum has invalid Jump Expression: \"$section->{gotoExpression}\". Error: $error";
+        }
+        if (my $var = $section->{variable}) {
+            if (my $count = $duplicateTargets->{$var}) {
+                push @messages, "Section $sNum variable name $var is re-used in $count other place(s).";
+            }
+        }
+
+        #step through each question validating it. 
+        my $questions = $self->questions([$s]);
+        for(my $q = 0; $q <= $#$questions; $q++){
+            my $qNum = $q + 1;
+            my $question = $self->question([$s,$q]);
+            if(! $self->validateGoto($question,$goodTargets)){
+                push @messages,"Section $sNum Question $qNum has invalid Jump target: \"$question->{goto}\"";
+            }
+            if(! $self->validateGotoInfiniteLoop($question)){
+                push @messages,"Section $sNum Question $qNum jumps to itself.";
+            }
+            if(my $error = $self->validateGotoExpression($question,$goodTargets)){
+                push @messages,"Section $sNum Question $qNum has invalid Jump Expression: \"$question->{gotoExpression}\". Error: $error";
+            }
+            if($#{$question->{answers}} < 0){
+                push @messages,"Section $sNum Question $qNum does not have any answers.";
+            }
+            if(! $question->{text} =~ /\w/){
+                push @messages,"Section $sNum Question $qNum does not have any text.";
+            }
+            if (my $var = $question->{variable}) {
+                if (my $count = $duplicateTargets->{$var}) {
+                    push @messages, "Section $sNum Question $qNum variable name $var is re-used in $count other place(s).";
+                }
+            }
+            
+            #step through each answer validating it. 
+            my $answers = $self->answers([$s,$q]);
+            for(my $a = 0; $a <= $#$answers; $a++){
+                my $aNum = $a + 1;
+                my $answer = $self->answer([$s,$q,$a]);
+                if(! $self->validateGoto($answer,$goodTargets)){
+                    push @messages,"Section $sNum Question $qNum Answer $aNum has invalid Jump target: \"$answer->{goto}\"";
+                }
+                if(! $self->validateGotoInfiniteLoop($answer)){
+                    push @messages,"Section $sNum Question $qNum Answer $aNum jumps to itself.";
+                }
+                if(my $error = $self->validateGotoExpression($answer,$goodTargets)){
+                    push @messages,"Section $sNum Question $qNum Answer $aNum has invalid Jump Expression: \"$answer->{gotoExpression}\". Error: $error";
+                }
+            }
+        }
+    }
+ 
+   return \@messages; 
+}
+
+sub validateGoto{
+    my $self = shift;
+    my $object = shift;
+    my $goodTargets = shift;
+    return 0 if($object->{goto} =~ /\w/ && ! exists($goodTargets->{$object->{goto}}));
+    return 1;
+}
+
+sub validateGotoInfiniteLoop{
+    my $self = shift;
+    my $object = shift;
+    return 0 if($object->{goto} =~ /\w/ and $object->{goto} eq $object->{variable});
+    return 1;
+}
+
+sub validateGotoExpression{
+    my $self = shift;
+    my $object = shift;
+    my $goodTargets = shift;
+    return unless $object->{gotoExpression};
+    
+    if (!$self->session->config->get('enableSurveyExpressionEngine')) {
+        return 'enableSurveyExpressionEngine is disabled in your site config!';
+    }
+    
+    use WebGUI::Asset::Wobject::Survey::ExpressionEngine;
+    my $engine = "WebGUI::Asset::Wobject::Survey::ExpressionEngine";
+    return $engine->run($self->session, $object->{gotoExpression}, { validate => 1, validTargets => $goodTargets } );
+}
+
 =head2 section ($address)
 
 Returns a reference to one section.
@@ -1224,9 +1332,9 @@ sub session {
 
 Returns a reference to all the questions from a particular section.
 
-=head3 $address
+=head3 $address (optional)
 
-See L<"Address Parameter">.
+See L<"Address Parameter">. If not defined, returns all questions.
 
 =cut
 
@@ -1234,7 +1342,13 @@ sub questions {
     my $self    = shift;
     my ($address) = validate_pos(@_, { type => ARRAYREF, optional => 1});
     
-    return $self->sections->[ $address->[0] ]->{questions};
+    if ($address) {
+        return $self->sections->[ $address->[0] ]->{questions};
+    } else {
+        my $questions;
+        push @$questions, @{$_->{questions} || []} for @{$self->sections};
+        return $questions;
+    }
 }
 
 =head2 question ($address)

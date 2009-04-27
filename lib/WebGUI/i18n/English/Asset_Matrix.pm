@@ -387,6 +387,16 @@ listing,|,
         lastUpdated => 0,
     },
 
+    'max screenshot width description' => {
+        message => q|Select the maximum width of the screenshots in this matrix. Screenshots that are larger will be resized.|,
+        lastUpdated => 0,
+    },
+
+    'max screenshot height description' => {
+        message => q|Select the maximum height of the screenshots in this matrix. Screenshots that are larger will be resized.|,
+        lastUpdated => 0,
+    },
+
     'compare color no description' => {
         message => q|Select the color for compare result 'No'  in the compare display.|,
         lastUpdated => 0,
@@ -525,6 +535,16 @@ to increase performance. How long should we cache them?|,
 
     'default sort label' => {
         message => q|Default Sort|,
+        lastUpdated => 0,
+    },
+
+    'max screenshot height label' => {
+        message => q|Maximum Screenshot Height|,
+        lastUpdated => 0,
+    },
+
+    'max screenshot width label' => {
+        message => q|Maximum Screenshot Width|,
         lastUpdated => 0,
     },
 
@@ -807,6 +827,17 @@ selectBox.</p>|
         message => q|Matrix Fieldtype|,
     },
 
+    'too many message' => {
+        lastUpdated => 0,
+        message => q|You tried to compare more than your maximum number of listings.|,
+        context => q|A message shown to the user when they have selected too many listings to compare.|,
+    },
+
+    'too few message' => {
+        lastUpdated => 0,
+        message => q|You tried to compare only one listing. If you want to view just one listing, click on its name.|,
+        context => q|A message shown to the user when they have selected only one listing to compare.|,
+    }
 };
 
 1;
