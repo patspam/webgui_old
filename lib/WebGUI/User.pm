@@ -410,6 +410,12 @@ sub delete {
 
     # remove inbox entries
     $db->write("DELETE FROM inbox WHERE userId=? AND (groupId IS NULL OR groupId='')",[$userId]);
+    
+    # remove flux user data
+    $db->write('DELETE FROM fluxRuleUserData where userId=?', [$userId]);
+    
+    # remove history rows
+    $db->write('DELETE FROM history where userId=?', [$userId]);
 
     # Shop cleanups
     my $sth = $session->db->prepare('select addressBookId from addressBook where userId=?');
