@@ -1264,6 +1264,21 @@ sub getIsa {
 
 #-------------------------------------------------------------------
 
+=head2 getManagerUrl ( )
+
+Returns the URL for the asset manager.
+
+=cut
+
+sub getManagerUrl {
+	my $self = shift;
+	return $self->getUrl( 'op=assetManager' );
+}
+
+
+
+#-------------------------------------------------------------------
+
 =head2 getMedia ( session )
 
 Constructor. Returns the media folder.
@@ -1536,7 +1551,7 @@ sub getToolbar {
     if ($userUiLevel >= $uiLevels->{"manage"}) {
         $output
             .= '<li class="yuimenuitem"><a class="yuimenuitemlabel" href="'
-            . $self->getUrl("op=assetManager") . '">' . $i18n->get("manage") . '</a></li>';
+            . $self->getManagerUrl . '">' . $i18n->get("manage") . '</a></li>';
     }
     $output .= '</ul></div></div>' . $toolbar . '</div>';
     $self->{_toolbar} = $output;
@@ -2720,7 +2735,7 @@ sub www_changeUrlConfirm {
 	}
 
 	if ($self->session->form->param("proceed") eq "manageAssets") {
-		$self->session->http->setRedirect($self->getUrl('op=assetManager'));
+		$self->session->http->setRedirect($self->getManagerUrl);
 	} else {
 		$self->session->http->setRedirect($self->getUrl());
 	}
@@ -2850,7 +2865,7 @@ compatibility)
 
 sub www_manageAssets {
     my $self = shift;
-    $self->session->http->setRedirect( $self->getUrl( 'op=assetManager' ) );
+    $self->session->http->setRedirect( $self->getManagerUrl );
     return "redirect";
 }
 
